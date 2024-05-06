@@ -14,6 +14,9 @@ import { useEffect, useRef, useState } from "react";
 
 enableLatestRenderer();
 
+const truck_icon = require("./assets/truck_icon.png");
+const sleep_icon = require("./assets/sleep.png");
+
 export default function App() {
   const [location, setLocation] = useState<LocationObject | null>(null);
 
@@ -68,6 +71,24 @@ export default function App() {
               latitude: location?.coords.latitude,
               longitude: location?.coords.longitude,
             }}
+            title="Esse é Você"
+            image={truck_icon}
+          />
+          <Marker
+            coordinate={{
+              latitude: location?.coords.latitude - 0.001,
+              longitude: location?.coords.longitude + 0.001,
+            }}
+            image={sleep_icon}
+            title="Vc dormiu aqui..."
+          />
+          <Marker
+            coordinate={{
+              latitude: location?.coords.latitude - 0.001,
+              longitude: location?.coords.longitude - 0.001,
+            }}
+            image={sleep_icon}
+            title="Vc dormiu aqui..."
           />
         </MapView>
       )}
