@@ -174,6 +174,15 @@ export default function App() {
           </ListItem>
         )}
       </Card>
+
+      <View style={styles.truck_map_card}>
+        <Icon name="truck" type="font-awesome" size={48} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+            Caminhão #1234
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
