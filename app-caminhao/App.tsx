@@ -155,6 +155,25 @@ export default function App() {
           </ListItem>
         )}
       </Card>
+      <Card containerStyle={styles.route_card}>
+        <Card.Title style={styles.route_card_title}>Rota</Card.Title>
+        {waypoints.slice(0, -1).map((p) => (
+          <ListItem id={`list_route_${p.name}`}>
+            <Icon name="place" />
+            <ListItem.Content>
+              <ListItem.Title>{p.name}</ListItem.Title>
+            </ListItem.Content>
+          </ListItem>
+        ))}
+        {destination && (
+          <ListItem id={`list_route_${destination.name}`}>
+            <Icon name="truck" type="font-awesome" />
+            <ListItem.Content>
+              <ListItem.Title>{destination.name}</ListItem.Title>
+            </ListItem.Content>
+          </ListItem>
+        )}
+      </Card>
     </View>
   );
 }
