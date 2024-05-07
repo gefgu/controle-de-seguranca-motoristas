@@ -12,7 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import MapViewDirections from "react-native-maps-directions";
 import { Card, Text } from "@rneui/themed";
-import { ListItem } from "@rneui/base";
+import { Icon, ListItem } from "@rneui/base";
 import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
 
 enableLatestRenderer();
@@ -21,7 +21,11 @@ const truck_icon = require("./assets/truck_icon.png");
 const sleep_icon = require("./assets/sleep.png");
 
 const waypoints = [
-  { latitude: -25.5272981, longitude: -49.4266079, name: "Centro Logístico" },
+  {
+    latitude: -25.5272981,
+    longitude: -49.4266079,
+    name: "Cia Verde Logística",
+  },
   { latitude: -25.5028027, longitude: -48.5220868, name: "Porto de Paranaguá" },
 ];
 function format_waypoint_address(
@@ -110,6 +114,7 @@ export default function App() {
             apikey={GOOGLE_MAPS_DIRECTIONS_API_KEY}
             strokeWidth={5}
             optimizeWaypoints={true}
+            resetOnChange={false}
           />
           {waypoints.slice(0, -1).map((p) => (
             <Marker
@@ -132,15 +137,23 @@ export default function App() {
         </MapView>
       )}
       <Card containerStyle={styles.route_card}>
-        <Card.Title>Testing</Card.Title>
-        <Text
-          style={{
-            marginBottom: 10,
-          }}
-        >
-          ABC
-        </Text>
-        <ListItem></ListItem>
+        <Card.Title>Rota</Card.Title>
+        {waypoints.slice(0, -1).map((p) => (
+          <ListItem id={`list_route_${p.name}`}>
+            <Icon name="place" />
+            <ListItem.Content>
+              <ListItem.Title>{p.name}</ListItem.Title>
+            </ListItem.Content>
+          </ListItem>
+        ))}
+        {destination && (
+          <ListItem id={`list_route_${destination.name}`}>
+            <Icon name="truck" type="font-awesome" />
+            <ListItem.Content>
+              <ListItem.Title>{destination.name}</ListItem.Title>
+            </ListItem.Content>
+          </ListItem>
+        )}
       </Card>
     </View>
   );
