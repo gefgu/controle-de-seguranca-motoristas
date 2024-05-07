@@ -1,4 +1,4 @@
-import { Text, View, Dimensions } from "react-native";
+import { View } from "react-native";
 import { styles } from "./styles";
 import MapView, { Marker, enableLatestRenderer } from "react-native-maps";
 import { GOOGLE_MAPS_DIRECTIONS_API_KEY } from "@env";
@@ -11,21 +11,35 @@ import {
 } from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import MapViewDirections from "react-native-maps-directions";
+import { Card, Text } from "@rneui/themed";
+import { ListItem } from "@rneui/base";
+import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
 
 enableLatestRenderer();
 
-const { width, height } = Dimensions.get("window");
-
-const waypoint_address = "-25.5272981,-49.4266079";
-const paranagua_address = "-25.5028027,-48.5220868";
-
 const truck_icon = require("./assets/truck_icon.png");
 const sleep_icon = require("./assets/sleep.png");
+
+const waypoints = [
+  { latitude: -25.5272981, longitude: -49.4266079, name: "Centro Logístico" },
+  { latitude: -25.5028027, longitude: -48.5220868, name: "Porto de Paranaguá" },
+];
+function format_waypoint_address(
+  w: { latitude: Int32; longitude: Int32 } | undefined
+) {
+  return `${w?.latitude},${w?.longitude}`;
+}
+
+const sleep_points = [
+  { latitude: -25.4207369, longitude: -49.2819641 },
+  { latitude: -25.4207369, longitude: -49.2790641 },
+];
 
 export default function App() {
   const [location, setLocation] = useState<LocationObject | null>(null);
 
   const mapRef = useRef<MapView>(null);
+  const destination = waypoints.at(-1);
 
   async function requestLocationPermissions() {
     const { granted } = await requestForegroundPermissionsAsync();
@@ -79,32 +93,55 @@ export default function App() {
             title="Esse é Você"
             image={truck_icon}
           />
-          <Marker
-            coordinate={{
-              latitude: location?.coords.latitude - 0.001,
-              longitude: location?.coords.longitude + 0.001,
-            }}
-            image={sleep_icon}
-            title="Vc dormiu aqui..."
-          />
-          <Marker
-            coordinate={{
-              latitude: location?.coords.latitude - 0.001,
-              longitude: location?.coords.longitude - 0.001,
-            }}
-            image={sleep_icon}
-            title="Vc dormiu aqui..."
-          />
+          {sleep_points.map((p) => (
+            <Marker
+              id={`${p.latitude}, ${p.longitude}`}
+              coordinate={p}
+              image={sleep_icon}
+              title="Vc dormiu aqui..."
+            />
+          ))}
           <MapViewDirections
             origin={location.coords}
-            waypoints={[waypoint_address]}
-            destination={paranagua_address}
+            waypoints={waypoints
+              .slice(0, -1)
+              .map((w) => format_waypoint_address(w))}
+            destination={format_waypoint_address(destination)}
             apikey={GOOGLE_MAPS_DIRECTIONS_API_KEY}
             strokeWidth={5}
             optimizeWaypoints={true}
           />
+          {waypoints.slice(0, -1).map((p) => (
+            <Marker
+              id={p.name}
+              coordinate={{ latitude: p.latitude, longitude: p.longitude }}
+              title={p.name}
+            />
+          ))}
+          {destination && (
+            <Marker
+              id={destination.name}
+              coordinate={{
+                latitude: destination.latitude,
+                longitude: destination.longitude,
+              }}
+              pinColor="green"
+              title={destination.name}
+            />
+          )}
         </MapView>
       )}
+      <Card containerStyle={styles.route_card}>
+        <Card.Title>Testing</Card.Title>
+        <Text
+          style={{
+            marginBottom: 10,
+          }}
+        >
+          ABC
+        </Text>
+        <ListItem></ListItem>
+      </Card>
     </View>
   );
 }
