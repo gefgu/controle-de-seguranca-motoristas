@@ -21,9 +21,14 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
     shadowRadius: 4,
+    maxHeight: 200,
     position: "absolute",
-    top: "8%",
-    left: "5%",
-    right: "5%",
+    top: "2%",
+    left: "2%",
+    right: "2%",
+  },
+  route_card_title: {
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

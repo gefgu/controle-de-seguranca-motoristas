@@ -11,7 +11,7 @@ import {
 } from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import MapViewDirections from "react-native-maps-directions";
-import { Card, Text } from "@rneui/themed";
+import { Card, Header, Text } from "@rneui/themed";
 import { Icon, ListItem } from "@rneui/base";
 import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
 
@@ -137,7 +137,7 @@ export default function App() {
         </MapView>
       )}
       <Card containerStyle={styles.route_card}>
-        <Card.Title>Rota</Card.Title>
+        <Card.Title style={styles.route_card_title}>Rota</Card.Title>
         {waypoints.slice(0, -1).map((p) => (
           <ListItem id={`list_route_${p.name}`}>
             <Icon name="place" />
