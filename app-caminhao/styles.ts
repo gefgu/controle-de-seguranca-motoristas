@@ -1,5 +1,17 @@
 import { StyleSheet } from "react-native";
 
+const card_style = {
+  backgroundColor: "white",
+  elevation: 5,
+  shadowColor: "#000",
+  paddingVertical: 8,
+  paddingHorizontal: 16,
+  borderRadius: 8,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.75,
+  shadowRadius: 4,
+};
+
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -12,16 +24,7 @@ export const styles = StyleSheet.create({
     width: "100%",
   },
   route_card: {
-    // position: "absolute",
-    backgroundColor: "white",
-    elevation: 5,
-    shadowColor: "#000",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.75,
-    shadowRadius: 4,
+    ...card_style,
     maxHeight: 200,
     position: "absolute",
     top: "5%",
@@ -55,5 +58,19 @@ export const styles = StyleSheet.create({
     gap: 32,
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  menu_card: {
+    ...card_style,
+    borderColor: "black",
+    borderWidth: 1,
+  },
+  backbutton: {
+    position: "absolute",
+    backgroundColor: "white",
+    borderRadius: 100,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    top: "1%",
+    left: "2%",
   },
 });

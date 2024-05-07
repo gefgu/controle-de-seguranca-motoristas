@@ -2,6 +2,7 @@
   "expo": {
     "name": "app-caminhao",
     "slug": "app-caminhao",
+    "scheme": "app-caminhao",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,6 +25,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [["expo-font", { "fonts": ["./assets/fonts/Inter.ttf"] }]]
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Inter.ttf"]
+        }
+      ],
+      "expo-router"
+    ]
   }
 }

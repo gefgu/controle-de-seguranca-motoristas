@@ -1,5 +1,5 @@
-import { View } from "react-native";
-import { styles } from "./styles";
+import { Touchable, TouchableOpacity, View } from "react-native";
+import { styles } from "../../styles";
 import MapView, { Marker, enableLatestRenderer } from "react-native-maps";
 import { GOOGLE_MAPS_DIRECTIONS_API_KEY } from "@env";
 import {
@@ -14,11 +14,12 @@ import MapViewDirections from "react-native-maps-directions";
 import { Card, Header, Text } from "@rneui/themed";
 import { Icon, ListItem } from "@rneui/base";
 import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
+import { Link } from "expo-router";
 
 enableLatestRenderer();
 
-const truck_icon = require("./assets/truck_icon.png");
-const sleep_icon = require("./assets/sleep.png");
+const truck_icon = require("../../assets/truck_icon.png");
+const sleep_icon = require("../../assets/sleep.png");
 
 const waypoints = [
   {
@@ -39,7 +40,7 @@ const sleep_points = [
   { latitude: -25.4207369, longitude: -49.2790641 },
 ];
 
-export default function App() {
+export default function DriverMapView() {
   const [location, setLocation] = useState<LocationObject | null>(null);
 
   const mapRef = useRef<MapView>(null);
@@ -136,6 +137,13 @@ export default function App() {
           )}
         </MapView>
       )}
+
+      {/* <Link href="/" asChild style={styles.backbutton}>
+        <TouchableOpacity>
+          <Icon name="arrow-left" type="font-awesome" />
+        </TouchableOpacity>
+      </Link> */}
+
       <Card containerStyle={styles.route_card}>
         <Card.Title style={styles.route_card_title}>Rota</Card.Title>
         {waypoints.slice(0, -1).map((p) => (
