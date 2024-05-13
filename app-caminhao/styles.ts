@@ -86,4 +86,11 @@ export const styles = StyleSheet.create({
     position: "relative",
     top: "1%",
   },
+  spaced_out_container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 48,
+  },
 });
