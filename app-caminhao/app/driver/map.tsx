@@ -15,27 +15,16 @@ import { Card, Text } from "@rneui/themed";
 import { Icon, ListItem } from "@rneui/base";
 import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
 import RouteCard from "../../components/RouteCard";
+import { supabase } from "../../lib/supabase";
+import Loading from "../../components/Loading";
 
 enableLatestRenderer();
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
 
-const origin = {
-  latitude: -25.5272981,
-  longitude: -49.4266079,
-  name: "Cia Verde Logística",
-};
-
-const destination = {
-  latitude: -25.5028027,
-  longitude: -48.5220868,
-  name: "Porto de Paranaguá",
-};
-function format_waypoint_address(
-  w: { latitude: Int32; longitude: Int32 } | undefined
-) {
-  return `${w?.latitude},${w?.longitude}`;
+function format_waypoint_address(lat: number, lon: number) {
+  return `${lat},${lon}`;
 }
 
 const sleep_points = [
@@ -43,8 +32,29 @@ const sleep_points = [
   { latitude: -25.4207369, longitude: -49.2790641 },
 ];
 
+type RouteData = {
+  destination: string;
+  destination_lat: number;
+  destination_lon: number;
+  driver: string;
+  id: string;
+  origin: string;
+  origin_lat: number;
+  origin_lon: number;
+};
+
+async function getRoute(): Promise<RouteData> {
+  const { data, error, status } = await supabase
+    .from("routes")
+    .select("*")
+    .single();
+  console.log(data);
+  return data as RouteData;
+}
+
 export default function DriverMapView() {
   const [location, setLocation] = useState<LocationObject | null>(null);
+  const [data, setData] = useState<RouteData | null>(null);
 
   const mapRef = useRef<MapView>(null);
 
@@ -79,6 +89,14 @@ export default function DriverMapView() {
     );
   }, []);
 
+  useEffect(() => {
+    getRoute().then((d) => setData(d));
+
+    return () => setData(null);
+  }, []);
+
+  if (!data) return <Loading />;
+
   return (
     <View style={styles.container}>
       {location && (
@@ -91,6 +109,7 @@ export default function DriverMapView() {
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           }}
+          camera={{ pitch: 70, center: location.coords, heading: 0 }}
         >
           <Marker
             coordinate={{
@@ -110,37 +129,37 @@ export default function DriverMapView() {
           ))}
           <MapViewDirections
             origin={location.coords}
-            destination={format_waypoint_address(destination)}
+            destination={format_waypoint_address(
+              data.destination_lat,
+              data.destination_lon
+            )}
             apikey={GOOGLE_MAPS_DIRECTIONS_API_KEY}
             strokeWidth={5}
-            optimizeWaypoints={true}
             resetOnChange={false}
           />
-          {origin && (
-            <Marker
-              id={origin.name}
-              coordinate={{
-                latitude: origin.latitude,
-                longitude: origin.longitude,
-              }}
-              title={origin.name}
-            />
-          )}
-          {destination && (
-            <Marker
-              id={destination.name}
-              coordinate={{
-                latitude: destination.latitude,
-                longitude: destination.longitude,
-              }}
-              pinColor="green"
-              title={destination.name}
-            />
-          )}
+          <Marker
+            coordinate={{
+              latitude: data.origin_lat,
+              longitude: data.origin_lon,
+            }}
+            title={data.origin}
+          />
+          )
+          <Marker
+            coordinate={{
+              latitude: data.destination_lat,
+              longitude: data.destination_lon,
+            }}
+            title={data.destination}
+            pinColor="green"
+          />
         </MapView>
       )}
 
-      <RouteCard origin={origin} destination={destination} />
+      <RouteCard
+        origin_name={data.origin}
+        destination_name={data.destination}
+      />
 
       <View style={styles.truck_map_card}>
         <Icon name="truck" type="font-awesome" size={48} />
