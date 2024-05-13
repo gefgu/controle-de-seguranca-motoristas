@@ -1,12 +1,12 @@
+import { Link } from "expo-router";
 import { View, Text, TouchableOpacity } from "react-native";
 
 const styles = {
-  container: {
+  menu_card: {
     backgroundColor: "white",
     elevation: 5,
     shadowColor: "#000",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    padding: 24,
     borderRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
@@ -16,10 +16,18 @@ const styles = {
   },
 };
 
-export default function TruckCard() {
+export default function MenuCard({
+  text,
+  href,
+}: {
+  text: string;
+  href: string;
+}) {
   return (
-    <TouchableOpacity style={styles.container}>
-      <Text>Caminhão</Text>
-    </TouchableOpacity>
+    <Link href={href} asChild>
+      <TouchableOpacity style={styles.menu_card}>
+        <Text>{text}</Text>
+      </TouchableOpacity>
+    </Link>
   );
 }
