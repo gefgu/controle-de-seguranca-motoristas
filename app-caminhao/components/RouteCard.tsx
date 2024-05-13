@@ -14,14 +14,14 @@ export default function RouteCard({
       <ListItem>
         <Icon name="place" size={28} />
         <ListItem.Content>
-          <Text style={styles.route_helper_text}>From:</Text>
+          <Text style={styles.route_helper_text}>De:</Text>
           <ListItem.Title>{origin_name}</ListItem.Title>
         </ListItem.Content>
       </ListItem>
       <ListItem>
         <Icon name="truck" type="font-awesome" size={28} />
         <ListItem.Content>
-          <Text style={styles.route_helper_text}>To:</Text>
+          <Text style={styles.route_helper_text}>Para:</Text>
           <ListItem.Title>{destination_name}</ListItem.Title>
         </ListItem.Content>
       </ListItem>

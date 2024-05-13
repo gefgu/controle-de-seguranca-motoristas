@@ -144,7 +144,6 @@ export default function DriverMapView() {
             }}
             title={data.origin}
           />
-          )
           <Marker
             coordinate={{
               latitude: data.destination_lat,
