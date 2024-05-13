@@ -95,6 +95,24 @@ export default function DriverMapView() {
     return () => setData(null);
   }, []);
 
+  useEffect(() => {
+    async function logRoute() {
+      if (!data) return;
+
+      const { status, error } = await supabase.from("tracking").insert({
+        route: data.id,
+        lat: location?.coords.latitude,
+        lon: location?.coords.longitude,
+        speed: location?.coords.speed,
+      });
+      // console.log(status);
+      // console.error(error);
+    }
+
+    const intervalId = setInterval(logRoute, 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
   if (!data) return <Loading />;
 
   return (
