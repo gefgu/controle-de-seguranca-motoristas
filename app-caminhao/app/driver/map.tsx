@@ -1,4 +1,4 @@
-import { Touchable, TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 import { styles } from "../../styles";
 import MapView, { Marker, enableLatestRenderer } from "react-native-maps";
 import { GOOGLE_MAPS_DIRECTIONS_API_KEY } from "@env";
@@ -11,24 +11,27 @@ import {
 } from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import MapViewDirections from "react-native-maps-directions";
-import { Card, Header, Text } from "@rneui/themed";
+import { Card, Text } from "@rneui/themed";
 import { Icon, ListItem } from "@rneui/base";
 import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
-import { Link } from "expo-router";
+import RouteCard from "../../components/RouteCard";
 
 enableLatestRenderer();
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
 
-const waypoints = [
-  {
-    latitude: -25.5272981,
-    longitude: -49.4266079,
-    name: "Cia Verde Logística",
-  },
-  { latitude: -25.5028027, longitude: -48.5220868, name: "Porto de Paranaguá" },
-];
+const origin = {
+  latitude: -25.5272981,
+  longitude: -49.4266079,
+  name: "Cia Verde Logística",
+};
+
+const destination = {
+  latitude: -25.5028027,
+  longitude: -48.5220868,
+  name: "Porto de Paranaguá",
+};
 function format_waypoint_address(
   w: { latitude: Int32; longitude: Int32 } | undefined
 ) {
@@ -44,7 +47,6 @@ export default function DriverMapView() {
   const [location, setLocation] = useState<LocationObject | null>(null);
 
   const mapRef = useRef<MapView>(null);
-  const destination = waypoints.at(-1);
 
   async function requestLocationPermissions() {
     const { granted } = await requestForegroundPermissionsAsync();
@@ -108,22 +110,22 @@ export default function DriverMapView() {
           ))}
           <MapViewDirections
             origin={location.coords}
-            waypoints={waypoints
-              .slice(0, -1)
-              .map((w) => format_waypoint_address(w))}
             destination={format_waypoint_address(destination)}
             apikey={GOOGLE_MAPS_DIRECTIONS_API_KEY}
             strokeWidth={5}
             optimizeWaypoints={true}
             resetOnChange={false}
           />
-          {waypoints.slice(0, -1).map((p) => (
+          {origin && (
             <Marker
-              id={p.name}
-              coordinate={{ latitude: p.latitude, longitude: p.longitude }}
-              title={p.name}
+              id={origin.name}
+              coordinate={{
+                latitude: origin.latitude,
+                longitude: origin.longitude,
+              }}
+              title={origin.name}
             />
-          ))}
+          )}
           {destination && (
             <Marker
               id={destination.name}
@@ -138,50 +140,7 @@ export default function DriverMapView() {
         </MapView>
       )}
 
-      {/* <Link href="/" asChild style={styles.backbutton}>
-        <TouchableOpacity>
-          <Icon name="arrow-left" type="font-awesome" />
-        </TouchableOpacity>
-      </Link> */}
-
-      <Card containerStyle={styles.route_card}>
-        <Card.Title style={styles.route_card_title}>Rota</Card.Title>
-        {waypoints.slice(0, -1).map((p) => (
-          <ListItem id={`list_route_${p.name}`}>
-            <Icon name="place" />
-            <ListItem.Content>
-              <ListItem.Title>{p.name}</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        ))}
-        {destination && (
-          <ListItem id={`list_route_${destination.name}`}>
-            <Icon name="truck" type="font-awesome" />
-            <ListItem.Content>
-              <ListItem.Title>{destination.name}</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        )}
-      </Card>
-      <Card containerStyle={styles.route_card}>
-        <Card.Title style={styles.route_card_title}>Rota</Card.Title>
-        {waypoints.slice(0, -1).map((p) => (
-          <ListItem id={`list_route_${p.name}`}>
-            <Icon name="place" />
-            <ListItem.Content>
-              <ListItem.Title>{p.name}</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        ))}
-        {destination && (
-          <ListItem id={`list_route_${destination.name}`}>
-            <Icon name="truck" type="font-awesome" />
-            <ListItem.Content>
-              <ListItem.Title>{destination.name}</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        )}
-      </Card>
+      <RouteCard origin={origin} destination={destination} />
 
       <View style={styles.truck_map_card}>
         <Icon name="truck" type="font-awesome" size={48} />

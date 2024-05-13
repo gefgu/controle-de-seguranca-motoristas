@@ -25,11 +25,15 @@ export const styles = StyleSheet.create({
   },
   route_card: {
     ...card_style,
+    padding: 8,
     maxHeight: 200,
     position: "absolute",
-    top: "5%",
+    top: "0%",
     left: "2%",
     right: "2%",
+    flex: 1,
+    justifyContent: "center",
+    alignContent: "center",
   },
   route_card_title: {
     fontWeight: "bold",
@@ -72,5 +76,14 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     top: "1%",
     left: "2%",
+  },
+  route_helper_text: {
+    color: "gray",
+    display: "flex",
+    fontSize: 12,
+    flex: 1,
+    flexDirection: "row",
+    position: "relative",
+    top: "1%",
   },
 });
