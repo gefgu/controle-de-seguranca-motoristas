@@ -18,7 +18,7 @@ import RouteCard from "../../components/RouteCard";
 import { supabase } from "../../lib/supabase";
 import Loading from "../../components/Loading";
 
-enableLatestRenderer();
+// enableLatestRenderer();
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
