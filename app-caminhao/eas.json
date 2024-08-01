@@ -2,11 +2,24 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_MAPS_DIRECTIONS_API_KEY": "process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY",
+        "DATABASE_PASSWORD": "process.env.DATABASE_PASSWORD",
+        "SUPABASE_URL": "process.env.SUPABASE_URL",
+        "SUPABASE_ANON_KEY": "process.env.SUPABASE_ANON_KEY"
+      }
     },
     "preview": {
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "env": {
+        "GOOGLE_MAPS_DIRECTIONS_API_KEY": "process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY",
+        "DATABASE_PASSWORD": "process.env.DATABASE_PASSWORD",
+        "SUPABASE_URL": "process.env.SUPABASE_URL",
+        "SUPABASE_ANON_KEY": "process.env.SUPABASE_ANON_KEY"
+      }
+    }
   }
 }
