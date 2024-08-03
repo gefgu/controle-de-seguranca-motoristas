@@ -2,6 +2,7 @@ import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import useBLE from "../useBLE";
 import { useEffect } from "react";
 import MenuCard from "./MenuCard";
+import { styles } from "../styles";
 
 export default function BluetoothModal() {
   const {
@@ -19,14 +20,14 @@ export default function BluetoothModal() {
   }, []);
 
   return (
-    <View>
+    <View style={{ ...styles.container, gap: 32 }}>
       <Text>Bluetooth Modal</Text>
       {connectedDevice ? (
         <Text>Connected</Text>
       ) : (
         <View>
           {allDevices.map((d) => (
-            <Text>{d.localName}</Text>
+            <Text>{d?.localName ?? d?.id}</Text>
           ))}
         </View>
       )}
