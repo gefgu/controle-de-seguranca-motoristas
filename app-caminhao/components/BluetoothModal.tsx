@@ -1,5 +1,7 @@
-import { View, Text, FlatList } from "react-native";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import useBLE from "../useBLE";
+import { useEffect } from "react";
+import MenuCard from "./MenuCard";
 
 export default function BluetoothModal() {
   const {
@@ -11,8 +13,14 @@ export default function BluetoothModal() {
     disconnectFromDevice,
   } = useBLE();
 
+  useEffect(() => {
+    requestPermissions();
+    scanForPeripherals();
+  }, []);
+
   return (
     <View>
+      <Text>Bluetooth Modal</Text>
       {connectedDevice ? (
         <Text>Connected</Text>
       ) : (
@@ -22,6 +30,7 @@ export default function BluetoothModal() {
           ))}
         </View>
       )}
+      <MenuCard text="Motorista" href="/driver/map" />
     </View>
   );
 }

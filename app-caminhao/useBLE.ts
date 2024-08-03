@@ -15,11 +15,11 @@ interface BluetoothLowEnergyApi {
 export default function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
 
-  console.log("ABC");
-  console.log(bleManager);
-
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+
+  console.log(allDevices);
+  console.log(connectedDevice);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermissions = await PermissionsAndroid.request(
