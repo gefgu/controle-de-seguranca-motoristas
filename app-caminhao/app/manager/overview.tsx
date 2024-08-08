@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import { styles } from "../../styles";
 import TruckCard from "../../components/TruckCard";
+import { Link } from "expo-router";
 
 export default function Overview() {
   return (

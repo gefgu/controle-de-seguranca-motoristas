@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 
 const mode_1 = require("../assets/1.jpg");
@@ -22,12 +23,14 @@ const styles = {
 
 export default function TruckCard({ status }: { status: number }) {
   return (
-    <TouchableOpacity style={styles.container}>
-      <Text>Caminhão</Text>
-      {/* {status === 0 && <Image source={require('./images.jpeg')} />} */}
-      {status === 1 && <Image source={mode_1} />}
-      {status === 2 && <Image source={mode_2} />}
-      {status === 3 && <Image source={mode_3} />}
-    </TouchableOpacity>
+    <Link asChild href="./map">
+      <TouchableOpacity style={styles.container}>
+        <Text>Caminhão</Text>
+        {/* {status === 0 && <Image source={require('./images.jpeg')} />} */}
+        {status === 1 && <Image source={mode_1} />}
+        {status === 2 && <Image source={mode_2} />}
+        {status === 3 && <Image source={mode_3} />}
+      </TouchableOpacity>
+    </Link>
   );
 }

@@ -27,7 +27,7 @@ export default function BluetoothModal() {
       ) : (
         <View>
           {allDevices.map((d) => (
-            <Text>{d?.localName ?? d?.id}</Text>
+            <Text key={d?.id}>{d?.localName ?? d?.id}</Text>
           ))}
         </View>
       )}

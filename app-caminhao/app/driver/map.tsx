@@ -1,7 +1,6 @@
 import { View } from "react-native";
 import { styles } from "../../styles";
-import MapView, { Marker, enableLatestRenderer } from "react-native-maps";
-import { GOOGLE_MAPS_DIRECTIONS_API_KEY } from "@env";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
   requestForegroundPermissionsAsync,
   getCurrentPositionAsync,
@@ -22,6 +21,8 @@ import Loading from "../../components/Loading";
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
+const GOOGLE_MAPS_DIRECTIONS_API_KEY =
+  process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY;
 
 function format_waypoint_address(lat: number, lon: number) {
   return `${lat},${lon}`;
@@ -100,7 +101,7 @@ export default function DriverMapView() {
       if (!data) return;
 
       const { status, error } = await supabase.from("tracking").insert({
-        route: data.id,
+        driver: data.driver,
         lat: location?.coords.latitude,
         lon: location?.coords.longitude,
         speed: location?.coords.speed,
@@ -128,6 +129,7 @@ export default function DriverMapView() {
             longitudeDelta: 0.005,
           }}
           camera={{ pitch: 70, center: location.coords, heading: 0 }}
+          provider={PROVIDER_GOOGLE}
         >
           <Marker
             coordinate={{
