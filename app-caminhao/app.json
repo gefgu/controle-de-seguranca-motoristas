@@ -30,7 +30,7 @@
       "package": "com.anonymous.appcaminhao",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyBokcoHClMbw2hbQ1wr1T67jgPCMndf7Kw"
+          "apiKey": "process.env."
         }
       }
     },

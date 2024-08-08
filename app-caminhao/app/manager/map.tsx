@@ -22,8 +22,11 @@ import Loading from "../../components/Loading";
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
-const GOOGLE_MAPS_DIRECTIONS_API_KEY =
-  process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY;
+const GOOGLE_MAPS_DIRECTIONS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+
+console.log(
+  `API_KEY: ${PROVIDER_GOOGLE} and ${GOOGLE_MAPS_DIRECTIONS_API_KEY}`
+);
 
 function format_waypoint_address(lat: number, lon: number) {
   return `${lat},${lon}`;
@@ -70,7 +73,12 @@ export default function DriverMapView() {
           filter: `driver=eq.${DRIVER_ID}`,
         },
         (d: any) => {
+          console.log(d);
           setData(d["new"]);
+          mapRef.current?.animateCamera({
+            pitch: 20,
+            center: { latitude: d["new"].lat, longitude: d["new"].lon },
+          });
         }
       )
       .subscribe();
