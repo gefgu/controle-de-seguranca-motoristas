@@ -1,27 +1,19 @@
 import { View } from "react-native";
-import { styles } from "../../styles";
+import { styles } from "../../../styles";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 // import { GOOGLE_MAPS_DIRECTIONS_API_KEY } from "@env";
-import {
-  requestForegroundPermissionsAsync,
-  getCurrentPositionAsync,
-  LocationObject,
-  watchPositionAsync,
-  LocationAccuracy,
-} from "expo-location";
+
 import { useEffect, useRef, useState } from "react";
-import MapViewDirections from "react-native-maps-directions";
 import { Card, Text } from "@rneui/themed";
 import { Icon, ListItem } from "@rneui/base";
-import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
-import RouteCard from "../../components/RouteCard";
-import { supabase } from "../../lib/supabase";
-import Loading from "../../components/Loading";
+import { supabase } from "../../../lib/supabase";
+import Loading from "../../../components/Loading";
+import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
 
 // enableLatestRenderer();
 
-const truck_icon = require("../../assets/truck_icon.png");
-const sleep_icon = require("../../assets/sleep.png");
+const truck_icon = require("../../../assets/truck_icon.png");
+const sleep_icon = require("../../../assets/sleep.png");
 const GOOGLE_MAPS_DIRECTIONS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 console.log(
@@ -42,13 +34,11 @@ type TrackingData = {
   is_sleeping: boolean;
 };
 
-const DRIVER_ID = "c94b81a1-f069-4f86-a2a7-ab80a494b553";
-
-async function getTrackingData(): Promise<TrackingData> {
+async function getTrackingData(driver_id: string): Promise<TrackingData> {
   const { data, error, status } = await supabase
     .from("tracking")
     .select("*")
-    .eq("driver", DRIVER_ID)
+    .eq("driver", driver_id)
     .order("time", { ascending: false })
     .limit(1)
     .single();
@@ -57,10 +47,12 @@ async function getTrackingData(): Promise<TrackingData> {
 }
 
 export default function DriverMapView() {
+  const params = useLocalSearchParams();
+  const driver_id = params["driver"] as string;
   const [data, setData] = useState<TrackingData | null>(null);
 
   useEffect(() => {
-    getTrackingData().then((d) => setData(d));
+    getTrackingData(driver_id).then((d) => setData(d));
 
     const sub = supabase
       .channel("tracking_drivers")
@@ -70,7 +62,7 @@ export default function DriverMapView() {
           event: "INSERT",
           schema: "public",
           table: "tracking",
-          filter: `driver=eq.${DRIVER_ID}`,
+          filter: `driver=eq.${driver_id}`,
         },
         (d: any) => {
           console.log(d);

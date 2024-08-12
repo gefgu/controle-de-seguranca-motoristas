@@ -21,9 +21,15 @@ const styles = {
   },
 };
 
-export default function TruckCard({ status }: { status: number }) {
+export default function TruckCard({
+  status,
+  driver_id,
+}: {
+  status: number;
+  driver_id: string;
+}) {
   return (
-    <Link asChild href="./map">
+    <Link asChild href={`./map/${driver_id}`}>
       <TouchableOpacity style={styles.container}>
         <Text>Caminhão</Text>
         {/* {status === 0 && <Image source={require('./images.jpeg')} />} */}
