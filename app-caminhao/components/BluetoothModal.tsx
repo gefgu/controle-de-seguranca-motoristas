@@ -25,9 +25,15 @@ export default function BluetoothModal() {
       {connectedDevice ? (
         <Text>Connected</Text>
       ) : (
-        <View>
+        <View style={{ gap: 16 }}>
           {allDevices.map((d) => (
-            <Text key={d?.id}>{d?.localName ?? d?.id}</Text>
+            <TouchableOpacity
+              key={d?.id}
+              style={styles.menu_card}
+              onPress={() => connectToDevice(d)}
+            >
+              <Text>{d?.localName ?? d?.id}</Text>
+            </TouchableOpacity>
           ))}
         </View>
       )}

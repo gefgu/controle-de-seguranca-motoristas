@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
 import { PermissionsAndroid, Platform } from "react-native";
-import { BleManager, Device } from "react-native-ble-plx";
+import {
+  BleError,
+  BleManager,
+  Characteristic,
+  Device,
+} from "react-native-ble-plx";
 import * as ExpoDevice from "expo-device";
+
+import base64 from "react-native-base64";
 
 interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
@@ -12,11 +19,15 @@ interface BluetoothLowEnergyApi {
   allDevices: Device[];
 }
 
+const SERVICE_UUID = "6a232ea8-eebe-4efc-bb8d-f91252f4d102";
+const CHARACTERISTIC_UUID = "c316c762-786e-40bf-b082-e7da0753b0fe";
+
 export default function useBLE(): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+  const [bleData, setbleData] = useState<any>(null);
 
   console.log(allDevices);
   console.log(connectedDevice);
@@ -80,7 +91,7 @@ export default function useBLE(): BluetoothLowEnergyApi {
   };
 
   const isDuplicateDevice = (devices: Device[], nextDevice: Device) =>
-    devices.findIndex((device) => nextDevice.id === device.id) > -1;
+    devices.findIndex((device) => nextDevice?.id === device?.id) > -1;
 
   const scanForPeripherals = () => {
     bleManager.startDeviceScan(null, null, (error, device) => {
@@ -102,6 +113,8 @@ export default function useBLE(): BluetoothLowEnergyApi {
       setConnectedDevice(deviceConnection);
       await deviceConnection.discoverAllServicesAndCharacteristics();
       bleManager.stopDeviceScan();
+      startStreamingData(device);
+      console.log("Connected to device");
     } catch (e) {
       console.log("FAILED TO CONNECT", e);
     }
@@ -111,6 +124,34 @@ export default function useBLE(): BluetoothLowEnergyApi {
     if (connectedDevice) {
       bleManager.cancelDeviceConnection(connectedDevice.id);
       setConnectedDevice(null);
+    }
+  };
+
+  const onDataUpdate = (
+    error: BleError | null,
+    characteristic: Characteristic | null
+  ) => {
+    if (error) {
+      console.log(error);
+      return -1;
+    } else if (!characteristic?.value) {
+      console.log("No Data was received");
+      return -1;
+    }
+
+    const rawData = base64.decode(characteristic.value);
+    console.log("RAW DATA: ", rawData);
+  };
+
+  const startStreamingData = async (device: Device) => {
+    if (device) {
+      device.monitorCharacteristicForService(
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID,
+        onDataUpdate
+      );
+    } else {
+      console.log("No Device Connected");
     }
   };
 

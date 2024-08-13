@@ -15,7 +15,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.appcaminhao"
+      "bundleIdentifier": "com.oficinas.appcaminhao"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +27,7 @@
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
       ],
-      "package": "com.anonymous.appcaminhao",
+      "package": "com.oficinas.appcaminhao",
       "config": {
         "googleMaps": {
           "apiKey": "process.env."
