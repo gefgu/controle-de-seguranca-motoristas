@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { styles } from "../../styles";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
@@ -16,6 +16,8 @@ import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
 import RouteCard from "../../components/RouteCard";
 import { supabase } from "../../lib/supabase";
 import Loading from "../../components/Loading";
+import useBLE from "../../useBLE";
+import BluetoothModal from "../../components/BluetoothModal";
 
 // enableLatestRenderer();
 
@@ -56,6 +58,15 @@ async function getRoute(): Promise<RouteData> {
 export default function DriverMapView() {
   const [location, setLocation] = useState<LocationObject | null>(null);
   const [data, setData] = useState<RouteData | null>(null);
+  const {
+    requestPermissions,
+    scanForPeripherals,
+    allDevices,
+    connectToDevice,
+    connectedDevice,
+    disconnectFromDevice,
+    bleData,
+  } = useBLE();
 
   const mapRef = useRef<MapView>(null);
 
@@ -99,12 +110,17 @@ export default function DriverMapView() {
   useEffect(() => {
     async function logRoute() {
       if (!data) return;
+      if (!connectedDevice) return;
+
+      console.log("BLE", bleData);
+      const is_sleeping = bleData == "sleep";
 
       const { status, error } = await supabase.from("tracking").insert({
         driver: data.driver,
         lat: location?.coords.latitude,
         lon: location?.coords.longitude,
         speed: location?.coords.speed,
+        is_sleeping: is_sleeping,
       });
       // console.log(status);
       // console.error(error);
@@ -113,6 +129,37 @@ export default function DriverMapView() {
     const intervalId = setInterval(logRoute, 1000);
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    requestPermissions();
+    scanForPeripherals();
+  }, []);
+
+  if (!connectedDevice) {
+    console.log(connectedDevice);
+    return (
+      <View style={{ ...styles.container, gap: 32 }}>
+        <Text>Bluetooth Modal</Text>
+        {connectedDevice ? (
+          <Text>Connected</Text>
+        ) : (
+          <View style={{ gap: 16 }}>
+            {allDevices
+              .filter((d) => d?.localName == "Detector de Sonolencia")
+              .map((d) => (
+                <TouchableOpacity
+                  key={d?.id}
+                  style={styles.menu_card}
+                  onPress={() => connectToDevice(d)}
+                >
+                  <Text>{d?.localName ?? d?.id}</Text>
+                </TouchableOpacity>
+              ))}
+          </View>
+        )}
+      </View>
+    );
+  }
 
   if (!data) return <Loading />;
 
@@ -128,7 +175,7 @@ export default function DriverMapView() {
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           }}
-          camera={{ pitch: 70, center: location.coords, heading: 0 }}
+          // camera={{ pitch: 70, center: location.coords, heading: 0 }}
           provider={PROVIDER_GOOGLE}
         >
           <Marker
@@ -147,7 +194,7 @@ export default function DriverMapView() {
               title="Vc dormiu aqui..."
             />
           ))}
-          <MapViewDirections
+          {/* <MapViewDirections
             origin={location.coords}
             destination={format_waypoint_address(
               data.destination_lat,
@@ -156,7 +203,7 @@ export default function DriverMapView() {
             apikey={GOOGLE_MAPS_DIRECTIONS_API_KEY}
             strokeWidth={5}
             resetOnChange={false}
-          />
+          /> */}
           <Marker
             coordinate={{
               latitude: data.origin_lat,

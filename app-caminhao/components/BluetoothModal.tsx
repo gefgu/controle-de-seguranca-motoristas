@@ -12,6 +12,7 @@ export default function BluetoothModal() {
     connectToDevice,
     connectedDevice,
     disconnectFromDevice,
+    bleData,
   } = useBLE();
 
   useEffect(() => {
@@ -37,7 +38,6 @@ export default function BluetoothModal() {
           ))}
         </View>
       )}
-      <MenuCard text="Motorista" href="/driver/map" />
     </View>
   );
 }

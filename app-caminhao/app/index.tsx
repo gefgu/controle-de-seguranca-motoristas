@@ -9,7 +9,7 @@ export default function Page() {
     <View style={{ ...styles.container, gap: 32 }}>
       <MenuCard text="Gerente" href="/manager/overview" />
 
-      <MenuCard text="Motorista" href="/driver" />
+      <MenuCard text="Motorista" href="/driver/map" />
     </View>
   );
 }

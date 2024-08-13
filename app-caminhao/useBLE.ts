@@ -17,6 +17,7 @@ interface BluetoothLowEnergyApi {
   disconnectFromDevice: () => void;
   connectedDevice: Device | null;
   allDevices: Device[];
+  bleData: any;
 }
 
 const SERVICE_UUID = "6a232ea8-eebe-4efc-bb8d-f91252f4d102";
@@ -29,8 +30,8 @@ export default function useBLE(): BluetoothLowEnergyApi {
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   const [bleData, setbleData] = useState<any>(null);
 
-  console.log(allDevices);
-  console.log(connectedDevice);
+  // console.log(allDevices);
+  // console.log(connectedDevice);
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermissions = await PermissionsAndroid.request(
@@ -112,6 +113,7 @@ export default function useBLE(): BluetoothLowEnergyApi {
       const deviceConnection = await bleManager.connectToDevice(device.id);
       setConnectedDevice(deviceConnection);
       await deviceConnection.discoverAllServicesAndCharacteristics();
+
       bleManager.stopDeviceScan();
       startStreamingData(device);
       console.log("Connected to device");
@@ -141,6 +143,7 @@ export default function useBLE(): BluetoothLowEnergyApi {
 
     const rawData = base64.decode(characteristic.value);
     console.log("RAW DATA: ", rawData);
+    setbleData(rawData);
   };
 
   const startStreamingData = async (device: Device) => {
@@ -162,5 +165,6 @@ export default function useBLE(): BluetoothLowEnergyApi {
     disconnectFromDevice,
     connectedDevice,
     allDevices,
+    bleData,
   };
 }
