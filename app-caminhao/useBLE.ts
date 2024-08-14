@@ -142,7 +142,7 @@ export default function useBLE(): BluetoothLowEnergyApi {
     }
 
     const rawData = base64.decode(characteristic.value);
-    console.log("RAW DATA: ", rawData);
+    console.log("RAW DATA:", rawData);
     setbleData(rawData);
   };
 

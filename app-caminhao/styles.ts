@@ -109,10 +109,10 @@ export const styles = StyleSheet.create({
   },
   spaced_out_container: {
     flex: 1,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
     gap: 48,
+    zIndex: 10,
   },
   heading1: {
     fontSize: 40,

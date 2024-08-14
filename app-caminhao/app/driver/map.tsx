@@ -58,6 +58,7 @@ async function getRoute(): Promise<RouteData> {
 export default function DriverMapView() {
   const [location, setLocation] = useState<LocationObject | null>(null);
   const [data, setData] = useState<RouteData | null>(null);
+  const [sleepPoints, setSleepPoints] = useState(sleep_points);
   const {
     requestPermissions,
     scanForPeripherals,
@@ -113,8 +114,16 @@ export default function DriverMapView() {
       if (!connectedDevice) return;
 
       console.log("BLE", bleData);
-      const is_sleeping = bleData == "sleep";
-
+      const is_sleeping = bleData == "True";
+      if (is_sleeping) {
+        setSleepPoints([
+          ...sleepPoints,
+          {
+            latitude: location?.coords.latitude as number,
+            longitude: location?.coords.longitude as number,
+          },
+        ]);
+      }
       const { status, error } = await supabase.from("tracking").insert({
         driver: data.driver,
         lat: location?.coords.latitude,
@@ -128,7 +137,7 @@ export default function DriverMapView() {
 
     const intervalId = setInterval(logRoute, 1000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [bleData]);
 
   useEffect(() => {
     requestPermissions();
@@ -164,7 +173,7 @@ export default function DriverMapView() {
           }}
         >
           <Text style={{ ...styles.heading1 }}>
-            Esperando Conexão Com Detector De Sonolência...
+            Conectando Com Detector De Sonolência...
           </Text>
           <Button
             title="Solid"
@@ -203,15 +212,15 @@ export default function DriverMapView() {
             title="Esse é Você"
             image={truck_icon}
           />
-          {sleep_points.map((p) => (
+          {sleepPoints.map((p) => (
             <Marker
               id={`${p.latitude}, ${p.longitude}`}
               coordinate={p}
               image={sleep_icon}
-              title="Vc dormiu aqui..."
+              title="Sonolência Detectada"
             />
           ))}
-          {/* <MapViewDirections
+          <MapViewDirections
             origin={location.coords}
             destination={format_waypoint_address(
               data.destination_lat,
@@ -220,7 +229,7 @@ export default function DriverMapView() {
             apikey={GOOGLE_MAPS_DIRECTIONS_API_KEY}
             strokeWidth={5}
             resetOnChange={false}
-          /> */}
+          />
           <Marker
             coordinate={{
               latitude: data.origin_lat,
