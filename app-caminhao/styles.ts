@@ -75,9 +75,19 @@ export const styles = StyleSheet.create({
     borderColor: "black",
     borderWidth: 1,
   },
+  menu_card_inverted: {
+    backgroundColor: "black",
+    color: "white",
+    // borderColor: "white",
+  },
   menu_card_text: {
     fontSize: 20,
     textAlign: "center",
+  },
+  menu_card_text_inverted: {
+    fontSize: 20,
+    textAlign: "center",
+    color: "white",
   },
   backbutton: {
     position: "absolute",

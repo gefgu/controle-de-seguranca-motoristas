@@ -36,9 +36,13 @@ export default function Page() {
         </View>
 
         <View style={{ gap: 24 }}>
-          <MenuCard text="Sou Gerente" href="/manager/overview" />
+          <MenuCard
+            text="Sou Gerente"
+            href="/manager/overview"
+            inverted={true}
+          />
 
-          <MenuCard text="Sou Motorista" href="/driver/map" />
+          <MenuCard text="Sou Motorista" href="/driver/map" inverted={false} />
         </View>
       </View>
     </View>
