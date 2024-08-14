@@ -64,9 +64,20 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   menu_card: {
-    ...card_style,
+    backgroundColor: "white",
+    elevation: 5,
+    shadowColor: "#000",
+    padding: 12,
+    borderRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.75,
+    shadowRadius: 4,
     borderColor: "black",
     borderWidth: 1,
+  },
+  menu_card_text: {
+    fontSize: 20,
+    textAlign: "center",
   },
   backbutton: {
     position: "absolute",
@@ -92,5 +103,15 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 48,
+  },
+  heading1: {
+    fontSize: 40,
+    textAlign: "center",
+    fontWeight: "800",
+  },
+  heading2: {
+    fontSize: 20,
+    textAlign: "center",
+    fontWeight: "800",
   },
 });
