@@ -1,4 +1,4 @@
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View, Image } from "react-native";
 import { styles } from "../../styles";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
@@ -10,19 +10,19 @@ import {
 } from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import MapViewDirections from "react-native-maps-directions";
-import { Card, Text } from "@rneui/themed";
+import { Card, Text, Button } from "@rneui/themed";
 import { Icon, ListItem } from "@rneui/base";
 import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
 import RouteCard from "../../components/RouteCard";
 import { supabase } from "../../lib/supabase";
 import Loading from "../../components/Loading";
 import useBLE from "../../useBLE";
-import BluetoothModal from "../../components/BluetoothModal";
 
 // enableLatestRenderer();
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
+const bg_image = require("../../assets/index-bg-2.jpg");
 const GOOGLE_MAPS_DIRECTIONS_API_KEY =
   process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY;
 
@@ -136,27 +136,44 @@ export default function DriverMapView() {
   }, []);
 
   if (!connectedDevice) {
-    console.log(connectedDevice);
+    const detector = allDevices.find(
+      (d) => d?.localName == "Detector de Sonolencia"
+    );
+    if (detector) {
+      connectToDevice(detector);
+    }
+
     return (
-      <View style={{ ...styles.container, gap: 32 }}>
-        <Text>Bluetooth Modal</Text>
-        {connectedDevice ? (
-          <Text>Connected</Text>
-        ) : (
-          <View style={{ gap: 16 }}>
-            {allDevices
-              .filter((d) => d?.localName == "Detector de Sonolencia")
-              .map((d) => (
-                <TouchableOpacity
-                  key={d?.id}
-                  style={styles.menu_card}
-                  onPress={() => connectToDevice(d)}
-                >
-                  <Text>{d?.localName ?? d?.id}</Text>
-                </TouchableOpacity>
-              ))}
-          </View>
-        )}
+      <View style={styles.container}>
+        <Image source={bg_image} resizeMode="center" />
+        <View
+          style={{
+            position: "absolute",
+            backgroundColor: "rgba(255, 255, 255, 0.4)",
+            width: "100%",
+            height: "100%",
+            zIndex: 1,
+          }}
+        />
+        <View
+          style={{
+            position: "absolute",
+            flex: 1,
+            justifyContent: "space-around",
+            zIndex: 2,
+          }}
+        >
+          <Text style={{ ...styles.heading1 }}>
+            Esperando Conexão Com Detector De Sonolência...
+          </Text>
+          <Button
+            title="Solid"
+            type="clear"
+            loading
+            style={{ backgroundColor: "white" }}
+            loadingProps={{ size: "large" }}
+          />
+        </View>
       </View>
     );
   }
