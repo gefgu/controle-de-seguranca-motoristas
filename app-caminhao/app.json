@@ -30,7 +30,7 @@
       "package": "com.oficinas.appcaminhao",
       "config": {
         "googleMaps": {
-          "apiKey": "process.env."
+          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
         }
       }
     },
@@ -41,7 +41,13 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/Inter.ttf"]
+          "fonts": [
+            "./assets/fonts/Inter.ttf",
+            "./assets/fonts/Oswald.tff",
+            "./assets/fonts/Oswald-Regular.tff",
+            "./assets/fonts/JosefinSans.tff",
+            "./assets/fonts/JosefinSans-Italic.ttf"
+          ]
         }
       ],
       "expo-router",

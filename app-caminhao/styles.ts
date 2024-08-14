@@ -83,11 +83,14 @@ export const styles = StyleSheet.create({
   menu_card_text: {
     fontSize: 20,
     textAlign: "center",
+    fontFamily: "Oswald",
+    // fontWeight: "bold",
   },
   menu_card_text_inverted: {
     fontSize: 20,
     textAlign: "center",
     color: "white",
+    fontFamily: "Josefin Sans",
   },
   backbutton: {
     position: "absolute",
@@ -118,10 +121,12 @@ export const styles = StyleSheet.create({
     fontSize: 40,
     textAlign: "center",
     fontWeight: "800",
+    fontFamily: "Inter",
   },
   heading2: {
     fontSize: 20,
     textAlign: "center",
     fontWeight: "800",
+    fontFamily: "Oswald",
   },
 });
