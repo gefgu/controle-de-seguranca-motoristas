@@ -8,14 +8,14 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "image": "./assets/index-bg-2.jpg",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.oficinas.appcaminhao"
+      "bundleIdentifier": "com.anonymous.appcaminhao"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +27,7 @@
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
       ],
-      "package": "com.oficinas.appcaminhao",
+      "package": "com.anonymous.appcaminhao",
       "config": {
         "googleMaps": {
           "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
@@ -43,10 +43,26 @@
         {
           "fonts": [
             "./assets/fonts/Inter.ttf",
-            "./assets/fonts/Oswald.tff",
-            "./assets/fonts/Oswald-Regular.tff",
-            "./assets/fonts/JosefinSans.tff",
-            "./assets/fonts/JosefinSans-Italic.ttf"
+            "./assets/fonts/Oswald.ttf",
+            "./assets/fonts/Oswald-Bold.ttf",
+            "./assets/fonts/Oswald-ExtraLight.ttf",
+            "./assets/fonts/Oswald-Light.ttf",
+            "./assets/fonts/Oswald-Medium.ttf",
+            "./assets/fonts/Oswald-Regular.ttf",
+            "./assets/fonts/Oswald-SemiBold.ttf",
+            "./assets/fonts/JosefinSans-Bold.ttf",
+            "./assets/fonts/JosefinSans-BoldItalic.ttf",
+            "./assets/fonts/JosefinSans-ExtraLight.ttf",
+            "./assets/fonts/JosefinSans-ExtraLightItalic.ttf",
+            "./assets/fonts/JosefinSans-Light.ttf",
+            "./assets/fonts/JosefinSans-LightItalic.ttf",
+            "./assets/fonts/JosefinSans-Medium.ttf",
+            "./assets/fonts/JosefinSans-MediumItalic.ttf",
+            "./assets/fonts/JosefinSans-Regular.ttf",
+            "./assets/fonts/JosefinSans-SemiBold.ttf",
+            "./assets/fonts/JosefinSans-SemiBoldItalic.ttf",
+            "./assets/fonts/JosefinSans-Thin.ttf",
+            "./assets/fonts/JosefinSans-ThinItalic.ttf"
           ]
         }
       ],

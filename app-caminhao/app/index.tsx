@@ -28,7 +28,7 @@ export default function Page() {
         }}
       >
         <View>
-          <Text style={{ ...styles.heading1, fontFamily: "Oswald" }}>
+          <Text style={{ ...styles.heading1 }}>
             Pronto para uma viagem mais tranquila?
           </Text>
 
