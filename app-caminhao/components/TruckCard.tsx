@@ -1,7 +1,9 @@
+import { Link } from "expo-router";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 
-const truck_icon = require("../../assets/truck_icon.png");
-const sleep_icon = require("../../assets/sleep.png");
+const mode_1 = require("../assets/1.jpg");
+const mode_2 = require("../assets/2.jpg");
+const mode_3 = require("../assets/3.jpg");
 
 const styles = {
   container: {
@@ -19,14 +21,22 @@ const styles = {
   },
 };
 
-export default function TruckCard({ status }: { status: number}) {
+export default function TruckCard({
+  status,
+  driver_id,
+}: {
+  status: number;
+  driver_id: string;
+}) {
   return (
-    <TouchableOpacity style={styles.container}>
-      <Text>Caminhão</Text>
-      {/* {status === 0 && <Image source={require('./images.jpeg')} />} */}
-      {status === 1 && <Image source={require('./1.jpg')} />}
-      {status === 2 && <Image source={require('./2.jpg')} />}
-      {status === 3 && <Image source={require('./3.jpg')} />}
-    </TouchableOpacity>
+    <Link asChild href={`./map/${driver_id}`}>
+      <TouchableOpacity style={styles.container}>
+        <Text>Caminhão</Text>
+        {/* {status === 0 && <Image source={require('./images.jpeg')} />} */}
+        {status === 1 && <Image source={mode_1} />}
+        {status === 2 && <Image source={mode_2} />}
+        {status === 3 && <Image source={mode_3} />}
+      </TouchableOpacity>
+    </Link>
   );
 }

@@ -8,18 +8,30 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "image": "./assets/bg.png",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.appcaminhao"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
+      ],
+      "package": "com.anonymous.appcaminhao",
+      "config": {
+        "googleMaps": {
+          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
+        }
       }
     },
     "web": {
@@ -29,10 +41,48 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/Inter.ttf"]
+          "fonts": [
+            "./assets/fonts/Inter.ttf",
+            "./assets/fonts/Oswald.ttf",
+            "./assets/fonts/Oswald-Bold.ttf",
+            "./assets/fonts/Oswald-ExtraLight.ttf",
+            "./assets/fonts/Oswald-Light.ttf",
+            "./assets/fonts/Oswald-Medium.ttf",
+            "./assets/fonts/Oswald-Regular.ttf",
+            "./assets/fonts/Oswald-SemiBold.ttf",
+            "./assets/fonts/JosefinSans-Bold.ttf",
+            "./assets/fonts/JosefinSans-BoldItalic.ttf",
+            "./assets/fonts/JosefinSans-ExtraLight.ttf",
+            "./assets/fonts/JosefinSans-ExtraLightItalic.ttf",
+            "./assets/fonts/JosefinSans-Light.ttf",
+            "./assets/fonts/JosefinSans-LightItalic.ttf",
+            "./assets/fonts/JosefinSans-Medium.ttf",
+            "./assets/fonts/JosefinSans-MediumItalic.ttf",
+            "./assets/fonts/JosefinSans-Regular.ttf",
+            "./assets/fonts/JosefinSans-SemiBold.ttf",
+            "./assets/fonts/JosefinSans-SemiBoldItalic.ttf",
+            "./assets/fonts/JosefinSans-Thin.ttf",
+            "./assets/fonts/JosefinSans-ThinItalic.ttf"
+          ]
         }
       ],
-      "expo-router"
-    ]
+      "expo-router",
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": ["peripheral", "central"],
+          "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "c661fa8d-9930-43a2-88f4-56ce8f4e3d9b"
+      }
+    }
   }
 }
