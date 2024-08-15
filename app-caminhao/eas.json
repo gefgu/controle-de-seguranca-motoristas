@@ -11,15 +11,27 @@
       }
     },
     "preview": {
-      "distribution": "internal"
-    },
-    "production": {
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "GOOGLE_MAPS_DIRECTIONS_API_KEY": "process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY",
         "DATABASE_PASSWORD": "process.env.DATABASE_PASSWORD",
         "SUPABASE_URL": "process.env.SUPABASE_URL",
         "SUPABASE_ANON_KEY": "process.env.SUPABASE_ANON_KEY"
       }
-    }
+    },
+    "preview2": {
+      "android": {
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "preview3": {
+      "developmentClient": true
+    },
+    "preview4": {
+      "distribution": "internal"
+    },
+    "production": {}
   }
 }

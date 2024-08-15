@@ -7,7 +7,7 @@ import MenuCard from "../components/MenuCard";
 export default function Page() {
   return (
     <View style={styles.container}>
-      <Image source={require("../assets/index-bg-2.jpg")} resizeMode="center" />
+      <Image source={require("../assets/bg.png")} resizeMode="center" />
 
       <View
         style={{

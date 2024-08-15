@@ -9,7 +9,7 @@ type DriversIds = {
   id: string;
   name: string;
 };
-const bg_image = require("../../assets/index-bg-2.jpg");
+const bg_image = require("../../assets/bg.png");
 
 async function getDrivers(): Promise<DriversIds[]> {
   const { data, error } = await supabase.from("drivers").select("*");

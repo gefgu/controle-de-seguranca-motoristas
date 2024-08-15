@@ -22,7 +22,7 @@ import useBLE from "../../useBLE";
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
-const bg_image = require("../../assets/index-bg-2.jpg");
+const bg_image = require("../../assets/bg.png");
 const GOOGLE_MAPS_DIRECTIONS_API_KEY =
   process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY;
 
