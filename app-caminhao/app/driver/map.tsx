@@ -59,6 +59,7 @@ export default function DriverMapView() {
   const [location, setLocation] = useState<LocationObject | null>(null);
   const [data, setData] = useState<RouteData | null>(null);
   const [sleepPoints, setSleepPoints] = useState(sleep_points);
+  const [lastSleepTime, setLastSleepTime] = useState<number | null>(null);
   const {
     requestPermissions,
     scanForPeripherals,
@@ -66,6 +67,7 @@ export default function DriverMapView() {
     connectToDevice,
     connectedDevice,
     disconnectFromDevice,
+    readDataFromDevice,
     bleData,
   } = useBLE();
 
@@ -114,30 +116,46 @@ export default function DriverMapView() {
       if (!connectedDevice) return;
 
       console.log("BLE", bleData);
-      const is_sleeping = bleData == "True";
+      const is_sleeping = await readDataFromDevice();
+      const currentTime = Date.now();
+
       if (is_sleeping) {
-        setSleepPoints([
-          ...sleepPoints,
-          {
-            latitude: location?.coords.latitude as number,
-            longitude: location?.coords.longitude as number,
-          },
-        ]);
+        if (!lastSleepTime || currentTime - lastSleepTime >= 10000) {
+          setSleepPoints([
+            ...sleepPoints,
+            {
+              latitude: location?.coords.latitude as number,
+              longitude: location?.coords.longitude as number,
+            },
+          ]);
+
+          const { status, error } = await supabase.from("tracking").insert({
+            driver: data.driver,
+            lat: location?.coords.latitude,
+            lon: location?.coords.longitude,
+            speed: location?.coords.speed,
+            is_sleeping: is_sleeping,
+          });
+
+          setLastSleepTime(currentTime);
+        }
+      } else {
+        const { status, error } = await supabase.from("tracking").insert({
+          driver: data.driver,
+          lat: location?.coords.latitude,
+          lon: location?.coords.longitude,
+          speed: location?.coords.speed,
+          is_sleeping: is_sleeping,
+        });
       }
-      const { status, error } = await supabase.from("tracking").insert({
-        driver: data.driver,
-        lat: location?.coords.latitude,
-        lon: location?.coords.longitude,
-        speed: location?.coords.speed,
-        is_sleeping: is_sleeping,
-      });
+
       // console.log(status);
       // console.error(error);
     }
 
-    const intervalId = setInterval(logRoute, 1000);
+    const intervalId = setInterval(logRoute, 100);
     return () => clearInterval(intervalId);
-  }, [bleData]);
+  }, [bleData, connectedDevice]);
 
   useEffect(() => {
     requestPermissions();
@@ -148,6 +166,7 @@ export default function DriverMapView() {
     const detector = allDevices.find(
       (d) => d?.localName == "Detector de Sonolencia"
     );
+    // console.log("Attempting to find device");
     if (detector) {
       connectToDevice(detector);
     }
@@ -212,12 +231,13 @@ export default function DriverMapView() {
             title="Esse é Você"
             image={truck_icon}
           />
-          {sleepPoints.map((p) => (
+          {sleepPoints.map((p, index) => (
             <Marker
               id={`${p.latitude}, ${p.longitude}`}
               coordinate={p}
               image={sleep_icon}
               title="Sonolência Detectada"
+              key={`${index} -> ${p.latitude}, ${p.longitude}`}
             />
           ))}
           <MapViewDirections
@@ -254,21 +274,13 @@ export default function DriverMapView() {
       />
 
       <View style={styles.truck_map_card}>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-            BLE: {bleData}
-          </Text>
-        </View>
-      </View>
-      {/* 
-      <View style={styles.truck_map_card}>
         <Icon name="truck" type="font-awesome" size={48} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-            Caminhão #1234
+            Caminhão #1234 - Dormindo: {bleData}
           </Text>
         </View>
-      </View> */}
+      </View>
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PermissionsAndroid, Platform } from "react-native";
 import {
   BleError,
@@ -18,6 +18,7 @@ interface BluetoothLowEnergyApi {
   connectedDevice: Device | null;
   allDevices: Device[];
   bleData: any;
+  readDataFromDevice: any;
 }
 
 const SERVICE_UUID = "6a232ea8-eebe-4efc-bb8d-f91252f4d102";
@@ -113,12 +114,11 @@ export default function useBLE(): BluetoothLowEnergyApi {
       const deviceConnection = await bleManager.connectToDevice(device.id);
       setConnectedDevice(deviceConnection);
       await deviceConnection.discoverAllServicesAndCharacteristics();
-
-      bleManager.stopDeviceScan();
-      startStreamingData(device);
       console.log("Connected to device");
-    } catch (e) {
-      console.log("FAILED TO CONNECT", e);
+      await bleManager.stopDeviceScan();
+    } catch (error) {
+      console.log("FAILED TO CONNECT", error);
+      // await bleManager.cancelDeviceConnection(device.id);
     }
   };
 
@@ -129,32 +129,30 @@ export default function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
-  const onDataUpdate = (
-    error: BleError | null,
-    characteristic: Characteristic | null
-  ) => {
-    if (error) {
-      console.log(error);
-      return -1;
-    } else if (!characteristic?.value) {
-      console.log("No Data was received");
-      return -1;
-    }
-
-    const rawData = base64.decode(characteristic.value);
-    console.log("RAW DATA:", rawData);
-    setbleData(rawData);
-  };
-
-  const startStreamingData = async (device: Device) => {
-    if (device) {
-      device.monitorCharacteristicForService(
-        SERVICE_UUID,
-        CHARACTERISTIC_UUID,
-        onDataUpdate
-      );
+  const readDataFromDevice = async (): Promise<any> => {
+    if (connectedDevice) {
+      try {
+        const characteristic =
+          await connectedDevice.readCharacteristicForService(
+            SERVICE_UUID,
+            CHARACTERISTIC_UUID
+          );
+        const value = base64.decode(characteristic.value);
+        // console.log(value);
+        if (bleData != value) setbleData(value);
+        return value == "True";
+      } catch (error) {
+        if (error.message.includes("connected")) {
+          await connectToDevice(connectedDevice);
+          // Optionally, retry reading the characteristic after reconnecting
+          return await readDataFromDevice();
+        } else {
+          console.error(error);
+          throw error; // Re-throw the error if it's not related to connection
+        }
+      }
     } else {
-      console.log("No Device Connected");
+      throw new Error("No connected device");
     }
   };
 
@@ -166,5 +164,6 @@ export default function useBLE(): BluetoothLowEnergyApi {
     connectedDevice,
     allDevices,
     bleData,
+    readDataFromDevice,
   };
 }
