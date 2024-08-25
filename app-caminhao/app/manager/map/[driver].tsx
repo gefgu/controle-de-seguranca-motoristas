@@ -14,10 +14,16 @@ import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
 
 const truck_icon = require("../../../assets/truck_icon.png");
 const sleep_icon = require("../../../assets/sleep.png");
-const GOOGLE_MAPS_DIRECTIONS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
-function format_waypoint_address(lat: number, lon: number) {
-  return `${lat},${lon}`;
+async function getSleepPoints(driver_id: string): Promise<[TrackingData]> {
+  const { data, error, status } = await supabase
+    .from("tracking")
+    .select("*")
+    .eq("driver", driver_id)
+    .eq("is_sleeping", true);
+  console.log("SLw");
+  console.log(data);
+  return data as [TrackingData];
 }
 
 type TrackingData = {
@@ -46,9 +52,11 @@ export default function DriverMapView() {
   const params = useLocalSearchParams();
   const driver_id = params["driver"] as string;
   const [data, setData] = useState<TrackingData | null>(null);
+  const [sleepPoints, setSleepPoints] = useState<[TrackingData] | null>(null);
 
   useEffect(() => {
     getTrackingData(driver_id).then((d) => setData(d));
+    getSleepPoints(driver_id).then((d) => setSleepPoints(d));
 
     const sub = supabase
       .channel("tracking_drivers")
@@ -100,9 +108,18 @@ export default function DriverMapView() {
               latitude: data.lat,
               longitude: data.lon,
             }}
-            title="Esse é Zezinho"
+            title={`Speed: ${data.speed}. Carga: Desconhecida`}
             image={truck_icon}
           />
+          {sleepPoints?.map((p, index) => (
+            <Marker
+              id={`${p.lat}, ${p.lon}`}
+              coordinate={{ latitude: p.lat, longitude: p.lon }}
+              image={sleep_icon}
+              title="Sonolência Detectada"
+              key={`${index} -> ${p.lat}, ${p.lon}`}
+            />
+          ))}
         </MapView>
       )}
 

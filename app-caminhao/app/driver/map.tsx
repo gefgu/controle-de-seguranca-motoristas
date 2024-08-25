@@ -135,6 +135,7 @@ export default function DriverMapView() {
             lon: location?.coords.longitude,
             speed: location?.coords.speed,
             is_sleeping: is_sleeping,
+            road_index: 2, // to be cleaned
           });
 
           setLastSleepTime(currentTime);

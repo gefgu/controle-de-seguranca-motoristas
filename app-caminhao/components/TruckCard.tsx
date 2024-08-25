@@ -10,8 +10,8 @@ const styles = {
     backgroundColor: "white",
     elevation: 5,
     shadowColor: "#000",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    // paddingVertical: 8,
+    // paddingHorizontal: 16,
     //borderRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
@@ -31,7 +31,6 @@ export default function TruckCard({
   return (
     <Link asChild href={`./map/${driver_id}`}>
       <TouchableOpacity style={styles.container}>
-        <Text>Caminhão</Text>
         {/* {status === 0 && <Image source={require('./images.jpeg')} />} */}
         {status === 1 && <Image source={mode_1} />}
         {status === 2 && <Image source={mode_2} />}
