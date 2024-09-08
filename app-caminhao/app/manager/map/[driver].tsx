@@ -15,15 +15,17 @@ import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
 const truck_icon = require("../../../assets/truck_icon.png");
 const sleep_icon = require("../../../assets/sleep.png");
 
-async function getSleepPoints(driver_id: string): Promise<[TrackingData]> {
+const sleep_points = [{ latitude: -25.4207369, longitude: -49.2819641 }];
+
+async function getSleepPoints(driver_id: string): Promise<[SleepPoint]> {
   const { data, error, status } = await supabase
     .from("tracking")
     .select("*")
     .eq("driver", driver_id)
     .eq("is_sleeping", true);
-  console.log("SLw");
-  console.log(data);
-  return data as [TrackingData];
+  return data?.map((d: TrackingData) => {
+    return { latitude: d?.lat, longitude: d?.lon };
+  }) as any as [SleepPoint];
 }
 
 type TrackingData = {
@@ -36,6 +38,11 @@ type TrackingData = {
   is_sleeping: boolean;
 };
 
+type SleepPoint = {
+  latitude: number;
+  longitude: number;
+};
+
 async function getTrackingData(driver_id: string): Promise<TrackingData> {
   const { data, error, status } = await supabase
     .from("tracking")
@@ -44,7 +51,7 @@ async function getTrackingData(driver_id: string): Promise<TrackingData> {
     .order("time", { ascending: false })
     .limit(1)
     .single();
-  console.log(data);
+  // console.log(data);
   return data as TrackingData;
 }
 
@@ -52,11 +59,13 @@ export default function DriverMapView() {
   const params = useLocalSearchParams();
   const driver_id = params["driver"] as string;
   const [data, setData] = useState<TrackingData | null>(null);
-  const [sleepPoints, setSleepPoints] = useState<[TrackingData] | null>(null);
+  const [sleepPoints, setSleepPoints] = useState(sleep_points);
+  const [lastSleepPoint, setLastSleepPoint] = useState(sleep_points[0]);
 
   useEffect(() => {
     getTrackingData(driver_id).then((d) => setData(d));
     getSleepPoints(driver_id).then((d) => setSleepPoints(d));
+    console.log(sleepPoints.length);
 
     const sub = supabase
       .channel("tracking_drivers")
@@ -69,12 +78,18 @@ export default function DriverMapView() {
           filter: `driver=eq.${driver_id}`,
         },
         (d: any) => {
-          console.log(d);
+          // console.log(d);
           setData(d["new"]);
           mapRef.current?.animateCamera({
             pitch: 20,
             center: { latitude: d["new"].lat, longitude: d["new"].lon },
           });
+          if (d["new"].is_sleeping) {
+            setLastSleepPoint({
+              latitude: d["new"].lat as number,
+              longitude: d["new"].lon as number,
+            });
+          }
         }
       )
       .subscribe();
@@ -83,6 +98,10 @@ export default function DriverMapView() {
       sub.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    setSleepPoints([...sleepPoints, lastSleepPoint]);
+  }, [lastSleepPoint]);
 
   const mapRef = useRef<MapView>(null);
 
@@ -113,11 +132,11 @@ export default function DriverMapView() {
           />
           {sleepPoints?.map((p, index) => (
             <Marker
-              id={`${p.lat}, ${p.lon}`}
-              coordinate={{ latitude: p.lat, longitude: p.lon }}
+              id={`${p.latitude}, ${p.longitude}`}
+              coordinate={{ latitude: p.latitude, longitude: p.longitude }}
               image={sleep_icon}
               title="Sonolência Detectada"
-              key={`${index} -> ${p.lat}, ${p.lon}`}
+              key={`${index} -> ${p.latitude}, ${p.longitude}`}
             />
           ))}
         </MapView>

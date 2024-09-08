@@ -30,10 +30,7 @@ function format_waypoint_address(lat: number, lon: number) {
   return `${lat},${lon}`;
 }
 
-const sleep_points = [
-  { latitude: -25.4207369, longitude: -49.2819641 },
-  { latitude: -25.4207369, longitude: -49.2790641 },
-];
+const sleep_points = [{ latitude: -25.4207369, longitude: -49.2819641 }];
 
 type RouteData = {
   destination: string;
