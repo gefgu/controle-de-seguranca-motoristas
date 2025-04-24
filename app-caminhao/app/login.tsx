@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   const getRoleDestination = () => {
     if (role === "manager") return "/manager/overview";
-    if (role === "driver") return "/driver/map";
+    if (role === "driver") return "/driver/menu";
     return "/";
   };
 
