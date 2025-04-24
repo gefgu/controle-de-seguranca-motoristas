@@ -1,13 +1,13 @@
-import { ListItem, Text } from "@rneui/base";
-import { TouchableOpacity, View, Image } from "react-native";
+import { View, Text, Image } from "react-native";
 import { styles } from "../styles";
-import { Link } from "expo-router";
 import MenuCard from "../components/MenuCard";
 
-export default function Page() {
+const bg_image = require("../assets/bg.png");
+
+export default function RoleSelectionPage() {
   return (
     <View style={styles.container}>
-      <Image source={require("../assets/bg.png")} resizeMode="center" />
+      <Image source={bg_image} resizeMode="center" />
 
       <View
         style={{
@@ -28,11 +28,8 @@ export default function Page() {
         }}
       >
         <View>
-          <Text style={{ ...styles.heading1 }}>
-            Pronto para uma viagem mais tranquila?
-          </Text>
-
-          <Text style={styles.heading2}>A CAMinhão pode te ajudar!</Text>
+          <Text style={{ ...styles.heading1 }}>Bem-vindo!</Text>
+          <Text style={styles.heading2}>Selecione seu perfil de usuário</Text>
         </View>
 
         <View style={{ gap: 24 }}>
