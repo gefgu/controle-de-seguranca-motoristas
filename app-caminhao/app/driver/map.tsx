@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Image } from "react-native";
+import { View, Image } from "react-native";
 import { styles } from "../../styles";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
@@ -10,15 +10,11 @@ import {
 } from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import MapViewDirections from "react-native-maps-directions";
-import { Card, Text, Button } from "@rneui/themed";
-import { Icon, ListItem } from "@rneui/base";
-import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
+import { Text, Button } from "@rneui/themed";
+import { Icon } from "@rneui/base";
 import RouteCard from "../../components/RouteCard";
 import { supabase } from "../../lib/supabase";
 import Loading from "../../components/Loading";
-import useBLE from "../../useBLE";
-
-// enableLatestRenderer();
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
@@ -48,7 +44,6 @@ async function getRoute(): Promise<RouteData> {
     .from("routes")
     .select("*")
     .single();
-  console.log(data);
   return data as RouteData;
 }
 
@@ -57,16 +52,8 @@ export default function DriverMapView() {
   const [data, setData] = useState<RouteData | null>(null);
   const [sleepPoints, setSleepPoints] = useState(sleep_points);
   const [lastSleepTime, setLastSleepTime] = useState<number | null>(null);
-  const {
-    requestPermissions,
-    scanForPeripherals,
-    allDevices,
-    connectToDevice,
-    connectedDevice,
-    disconnectFromDevice,
-    readDataFromDevice,
-    bleData,
-  } = useBLE();
+  const [isSleeping, setIsSleeping] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true);
 
   const mapRef = useRef<MapView>(null);
 
@@ -76,7 +63,6 @@ export default function DriverMapView() {
     if (granted) {
       const currentPosition = await getCurrentPositionAsync();
       setLocation(currentPosition);
-      console.log(currentPosition);
     }
   }
 
@@ -107,31 +93,38 @@ export default function DriverMapView() {
     return () => setData(null);
   }, []);
 
+  // Simulating connection with a timeout
+  useEffect(() => {
+    // Simulate connection process with a 3-second timeout
+    const timer = setTimeout(() => {
+      setIsConnecting(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     async function logRoute() {
-      if (!data) return;
-      if (!connectedDevice) return;
+      if (!data || !location) return;
 
-      console.log("BLE", bleData);
-      const is_sleeping = await readDataFromDevice();
       const currentTime = Date.now();
 
-      if (is_sleeping) {
+      if (isSleeping) {
         if (!lastSleepTime || currentTime - lastSleepTime >= 10000) {
           setSleepPoints([
             ...sleepPoints,
             {
-              latitude: location?.coords.latitude as number,
-              longitude: location?.coords.longitude as number,
+              latitude: location.coords.latitude as number,
+              longitude: location.coords.longitude as number,
             },
           ]);
 
           const { status, error } = await supabase.from("tracking").insert({
             driver: data.driver,
-            lat: location?.coords.latitude,
-            lon: location?.coords.longitude,
-            speed: location?.coords.speed,
-            is_sleeping: is_sleeping,
+            lat: location.coords.latitude,
+            lon: location.coords.longitude,
+            speed: location.coords.speed,
+            is_sleeping: isSleeping,
             road_index: 2, // to be cleaned
           });
 
@@ -140,35 +133,24 @@ export default function DriverMapView() {
       } else {
         const { status, error } = await supabase.from("tracking").insert({
           driver: data.driver,
-          lat: location?.coords.latitude,
-          lon: location?.coords.longitude,
-          speed: location?.coords.speed,
-          is_sleeping: is_sleeping,
+          lat: location.coords.latitude,
+          lon: location.coords.longitude,
+          speed: location.coords.speed,
+          is_sleeping: isSleeping,
         });
       }
-
-      // console.log(status);
-      // console.error(error);
     }
 
-    const intervalId = setInterval(logRoute, 100);
+    const intervalId = setInterval(logRoute, 5000);
     return () => clearInterval(intervalId);
-  }, [bleData, connectedDevice]);
+  }, [location, data, isSleeping, lastSleepTime, sleepPoints]);
 
-  useEffect(() => {
-    requestPermissions();
-    scanForPeripherals();
-  }, []);
+  // Toggle sleep status for testing
+  const toggleSleepStatus = () => {
+    setIsSleeping(!isSleeping);
+  };
 
-  if (!connectedDevice) {
-    const detector = allDevices.find(
-      (d) => d?.localName == "Detector de Sonolencia"
-    );
-    // console.log("Attempting to find device");
-    if (detector) {
-      connectToDevice(detector);
-    }
-
+  if (isConnecting) {
     return (
       <View style={styles.container}>
         <Image source={bg_image} resizeMode="center" />
@@ -213,29 +195,27 @@ export default function DriverMapView() {
           ref={mapRef}
           style={styles.map}
           initialRegion={{
-            latitude: location?.coords.latitude,
-            longitude: location?.coords.longitude,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           }}
-          // camera={{ pitch: 70, center: location.coords, heading: 0 }}
           provider={PROVIDER_GOOGLE}
         >
           <Marker
             coordinate={{
-              latitude: location?.coords.latitude,
-              longitude: location?.coords.longitude,
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
             }}
             title="Esse é Você"
             image={truck_icon}
           />
           {sleepPoints.map((p, index) => (
             <Marker
-              id={`${p.latitude}, ${p.longitude}`}
               coordinate={p}
               image={sleep_icon}
               title="Sonolência Detectada"
-              key={`${index} -> ${p.latitude}, ${p.longitude}`}
+              key={`sleep-${index}`}
             />
           ))}
           <MapViewDirections
@@ -275,8 +255,18 @@ export default function DriverMapView() {
         <Icon name="truck" type="font-awesome" size={48} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-            Caminhão #1234 - Dormindo: {bleData}
+            Caminhão #1234 - Status: {isSleeping ? "Dormindo" : "Alerta"}
           </Text>
+          {/* <Button
+            title={isSleeping ? "Marcar como Alerta" : "Simular Sonolência"}
+            onPress={toggleSleepStatus}
+            buttonStyle={{
+              backgroundColor: isSleeping ? "green" : "red",
+              borderRadius: 5,
+              marginTop: 5,
+            }}
+            size="sm"
+          /> */}
         </View>
       </View>
     </View>
