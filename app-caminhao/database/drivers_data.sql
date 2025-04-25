@@ -1,0 +1,17 @@
+INSERT INTO drivers (name, license_number, phone, email, status, date_hired) VALUES
+('João Silva', 'AB123456', '+55 11 98765-4321', 'joao.silva@email.com', 'active', '2022-03-15'),
+('Maria Oliveira', 'CD789012', '+55 21 98765-4322', 'maria.oliveira@email.com', 'on_trip', '2023-01-10'),
+('Carlos Santos', 'EF345678', '+55 48 98765-4323', 'carlos.santos@email.com', 'active', '2021-07-22'),
+('Ana Pereira', 'GH901234', '+55 51 98765-4324', 'ana.pereira@email.com', 'active', '2022-05-18'),
+('Pedro Souza', 'IJ567890', '+55 31 98765-4325', 'pedro.souza@email.com', 'inactive', '2021-11-30'),
+('Julia Costa', 'KL123478', '+55 41 98765-4326', 'julia.costa@email.com', 'on_trip', '2023-04-05'),
+('Lucas Ferreira', 'MN567891', '+55 81 98765-4327', 'lucas.ferreira@email.com', 'active', '2022-08-12'),
+('Beatriz Lima', 'OP234567', '+55 11 98765-4328', 'beatriz.lima@email.com', 'active', '2023-02-28'),
+('Miguel Alves', 'QR890123', '+55 21 98765-4329', 'miguel.alves@email.com', 'inactive', '2021-09-15'),
+('Sophia Ribeiro', 'ST456789', '+55 51 98765-4330', 'sophia.ribeiro@email.com', 'on_trip', '2022-06-20'),
+('Gabriel Martins', 'UV012345', '+55 31 98765-4331', 'gabriel.martins@email.com', 'active', '2023-03-10'),
+('Isabella Cardoso', 'WX678901', '+55 11 98765-4332', 'isabella.cardoso@email.com', 'active', '2021-12-05'),
+('Rafael Melo', 'YZ234567', '+55 41 98765-4333', 'rafael.melo@email.com', 'on_trip', '2022-10-15'),
+('Mariana Dias', 'AB345678', '+55 21 98765-4334', 'mariana.dias@email.com', 'active', '2023-05-01'),
+('Bruno Castro', 'CD456789', '+55 51 98765-4335', 'bruno.castro@email.com', 'active', '2022-01-12'),
+('Camila Rocha', 'EF567890', '+55 48 98765-4336', 'camila.rocha@email.com', 'inactive', '2021-08-25');
