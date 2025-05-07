@@ -1,10 +1,20 @@
 @startuml CAMinhão - Driver Fatigue Monitoring System
 
-!theme mars
+' Aumentando o espaçamento entre elementos
 skinparam linetype ortho
-skinparam nodesep 100
-skinparam ranksep 80
+skinparam nodesep 150
+skinparam ranksep 120
 skinparam packageStyle rectangle
+
+' Configurações adicionais para melhorar a visualização
+skinparam ArrowColor #33658a
+skinparam ArrowThickness 1.5
+skinparam Padding 10
+skinparam componentMargin 20
+
+' Configuração para ajudar com textos longos nas relações
+skinparam wrapWidth 150
+skinparam maxMessageSize 150
 
 ' Database Layer
 package "Database Models" #LightYellow {
@@ -342,6 +352,35 @@ interface BluetoothLowEnergyApi {
 +bleData: any
 +readDataFromDevice: any
 }
+
+interface LatLng {
++latitude: number
++longitude: number
+}
+
+interface LocationObject {
++coords: CoordsObject
++timestamp: number
+}
+
+interface CoordsObject {
++latitude: number
++longitude: number
++altitude: number
++accuracy: number
++heading: number
++speed: number
+}
+
+interface Device {
++id: string
++name: string
++rssi: number
++manufacturerData?: number[]
++serviceUUIDs?: string[]
++connected: boolean
+}
+
 }
 
 ' Database Relationships
@@ -360,11 +399,11 @@ Tracking "many: references" -- "1: identified by" Roads
 DriverMapView --> "renders directions with" MapViewDirections
 DriverMapView --> "displays" RouteCard
 DriverMapView --> "creates" SleepEvents : creates fatigue events
-DriverMapView --> "updates position in" Tracking : updates location data
+DriverMapView --> "updates" Tracking : updates location data
 DriverMapView ..> "connects to device via" BLEModule : detects fatigue
 DriverMapView ..> "requests position from" LocationService : gets GPS coordinates
 
-ManagerMapView --> "reads current" Tracking : displays real-time position
+ManagerMapView --> "reads" Tracking : displays real-time position
 ManagerMapView --> "displays historical" SleepEvents : shows fatigue events
 ManagerMapView --> "renders" TruckCard : shows truck status
 
@@ -409,6 +448,41 @@ BLEModule --> "implements" BluetoothLowEnergyApi : provides BLE functionality
 
 RoleSelectionPage --> "navigates to" DriverLogin : directs driver login
 RoleSelectionPage --> "navigates to" ManagerLogin : directs manager login
+' Service Connections (adicionando relacionamentos que estão faltando)
+LocationService ..> "provides" LocationObject : returns location data
+LocationService ..> "calculates between" LatLng : measures distances
+
+BLEModule ..> "manages" Device : scans and connects to devices
+
+' Component Relationships (adicionando relacionamentos que estão faltando)
+DriverMapView ..> "uses" LocationObject : tracks current position
+DriverMapView ..> "creates" SleepPoint : records fatigue points
+DriverMapView ..> "displays" LatLng : shows coordinates on map
+
+ManagerMapView ..> "uses" LatLng : for map coordinates
+ManagerMapView ..> "displays" SleepPoint : shows fatigue events
+
+' Data Flow Relationships
+Tracking ..> "contains" LatLng : stores coordinates
+SleepEvents ..> "contains" LatLng : stores sleep event locations
+Roads ..> "contains" LatLng : stores road coordinate points
+
+' Screen Relationships
+DriverLogin --> "navigates to" DriverMenuPage : after authentication
+ManagerLogin --> "navigates to" ManagerOverview : after authentication
+DriverMenuPage --> "navigates to" DriverMapScreen : starts trip tracking
+DriverMenuPage --> "navigates to" DriverHistoryPage : views past trips
+ManagerOverview --> "navigates to" RealtimePage : monitors active drivers
+ManagerOverview --> "navigates to" ManagerHistoryPage : views trip history
+ManagerOverview --> "navigates to" FleetSummaryPage : views fleet statistics
+
+' Device Connections 
+Device --> "provides data to" BLEModule : sends fatigue alerts
+CoordsObject --> "updates" LocationObject : provides coordinate details
+
+' RouteData relationship
+RouteData --> "generates" Trips : creates trip records
+
 
 note "CAMinhão - Freight Driver Fatigue Monitoring System" as AppTitle
 AppTitle .. DriverMapView
