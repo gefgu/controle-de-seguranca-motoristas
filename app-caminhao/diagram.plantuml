@@ -1,0 +1,417 @@
+@startuml CAMinhão - Driver Fatigue Monitoring System
+
+!theme mars
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam packageStyle rectangle
+
+' Database Layer
+package "Database Models" #LightYellow {
+class Drivers {
++id: bigint
++name: text
++license_number: text
++phone: text
++email: text
++status: text
++date_hired: date
++created_at: timestamp
+}
+
+class Vehicles {
++id: bigint
++license_plate: text
++model: text
++year: integer
++status: text
++created_at: timestamp
+}
+
+class Trips {
++id: bigint
++driver_id: bigint
++vehicle_id: bigint
++origin_name: text
++origin_lat: double
++origin_lon: double
++destination_name: text
++destination_lat: double
++destination_lon: double
++distance: double
++start_time: timestamp
++end_time: timestamp
++status: text
++description: text
++created_at: timestamp
+}
+
+class Tracking {
++id: bigint
++driver_id: bigint
++trip_id: bigint
++vehicle_id: bigint
++lat: double
++lon: double
++speed: double
++is_sleeping: boolean
++road_index: integer
++timestamp: timestamp
+}
+
+class SleepEvents {
++id: bigint
++trip_id: bigint
++driver_id: bigint
++lat: double
++lon: double
++start_time: timestamp
++end_time: timestamp
++duration: interval
++severity: text
++created_at: timestamp
+}
+
+class Supervisors {
++id: bigint
++name: text
++email: text
++phone: text
++created_at: timestamp
+}
+
+class SupervisorDriver {
++supervisor_id: bigint
++driver_id: bigint
++assigned_date: timestamp
+}
+
+class TripStatistics {
++id: bigint
++month: integer
++year: integer
++total_trips: integer
++total_distance: double
++average_trip_duration: interval
++total_sleep_events: integer
++critical_sleep_incidents: integer
++created_at: timestamp
+}
+
+class Roads {
++road_id: text
++road_index: integer
++name: text
++lat: double
++lon: double
+}
+}
+
+' Core UI Components
+package "UI Components" #LightBlue {
+class MenuCard {
++text: string
++href: string
++inverted: boolean
++render()
+}
+
+class TruckCard {
++status: number
++driver_id: string
++render()
+}
+
+class TripCard {
++trip: TripData
++onPress: function
++render()
+}
+
+class RouteCard {
++origin_name: string
++destination_name: string
++render()
+}
+
+class TripDetail {
++trip: TripData
++render()
+}
+
+class Loading {
++render()
+}
+}
+
+' MapView Components
+package "Map Components" #PaleGreen {
+class DriverMapView {
+-location: LocationObject
+-data: RouteData
+-sleepPoints: SleepPoint[]
+-isSleeping: boolean
+-lastSleepTime: number
+-isConnecting: boolean
++requestLocationPermissions()
++toggleSleepStatus()
++logRoute()
++watchPosition()
++render()
+}
+
+class ManagerMapView {
+-data: TrackingData
+-sleepPoints: SleepPoint[]
+-mapRef: React.RefObject<MapView>
+-lastSleepPoint: SleepPoint
++getTrackingData()
++getSleepPoints()
++subscribeToRealtimeUpdates()
++render()
+}
+
+class MapViewDirections {
++origin: LatLng
++destination: LatLng
++apikey: string
++strokeWidth: number
++render()
+}
+}
+
+' Screens by Role
+package "Driver Screens" #LightGreen {
+class DriverLogin {
+-loading: boolean
++handleLogin()
++getRoleDestination()
++render()
+}
+
+class DriverMenuPage {
++render()
+}
+
+class DriverMapScreen {
++render()
+}
+
+class DriverHistoryPage {
+-selectedTrip: TripData
+-trips: TripData[]
++handleSelectTrip()
++handleBack()
++render()
+}
+}
+
+package "Manager Screens" #LightCoral {
+class ManagerLogin {
+-loading: boolean
++handleLogin()
++getRoleDestination()
++render()
+}
+
+class ManagerOverview {
++render()
+}
+
+class RealtimePage {
+-activeDrivers: DriverData[]
+-statuses: {status: number, label: string, color: string}[]
++render()
+}
+
+class ManagerHistoryPage {
+-selectedTrip: TripData
+-trips: TripData[]
++handleSelectTrip()
++handleBack()
++render()
+}
+
+class FleetSummaryPage {
+-fleetStats: FleetStats
++render()
+}
+
+class RoleSelectionPage {
++render()
+}
+}
+
+' Services
+package "Services" #Lavender {
+class SupabaseService {
++client: SupabaseClient
++from(table: string)
++channel(name: string)
++auth
+}
+
+class BLEModule {
+-bleManager: BleManager
+-allDevices: Device[]
+-connectedDevice: Device
+-bleData: any
++requestPermissions()
++scanForPeripherals()
++connectToDevice()
++disconnectFromDevice()
++readDataFromDevice()
+}
+
+class LocationService {
++requestPermissions()
++getCurrentPosition()
++watchPosition()
++calculateDistance()
+}
+}
+
+' Data Types & Interfaces
+package "Interfaces" #LightGrey {
+interface TripData {
++id: string
++title: string
++startDate: string
++startTime: string
++endTime: string
++description: string
++distance: string
++sleepEvents: number
++sleepDuration: string
++origin: LatLng
++destination: LatLng
++sleepPoints: LatLng[]
+}
+
+interface RouteData {
++id: string
++driver: string
++origin: string
++origin_lat: number
++origin_lon: number
++destination: string
++destination_lat: number
++destination_lon: number
+}
+
+interface TrackingData {
++id: string
++driver: string
++lat: number
++lon: number
++time: string
++speed: number
++is_sleeping: boolean
+}
+
+interface SleepPoint {
++latitude: number
++longitude: number
+}
+
+interface DriverData {
++id: string
++name: string
++status: number
++location: string
++lastUpdate: string
+}
+
+interface FleetStats {
++totalDrivers: number
++activeDrivers: number
++totalVehicles: number
++totalTripsThisMonth: number
++averageTripDuration: string
++sleepEvents: object
++monthlyTrips: number[]
+}
+
+interface BluetoothLowEnergyApi {
++requestPermissions(): Promise<boolean>
++scanForPeripherals(): void
++connectToDevice: (deviceId: Device) => Promise<void>
++disconnectFromDevice: () => void
++connectedDevice: Device | null
++allDevices: Device[]
++bleData: any
++readDataFromDevice: any
+}
+}
+
+' Database Relationships
+Drivers "1" --* "many: tracks trips of" Trips
+Vehicles "1" --* "many: used in" Trips
+Trips "1" --* "many: generates" Tracking
+Drivers "1" --* "many: has location" Tracking
+Vehicles "1" --* "many: recorded in" Tracking
+Trips "1" --* "many: contains" SleepEvents
+Drivers "1" --* "many: experiences" SleepEvents
+Supervisors "1" --* "many: supervises" SupervisorDriver
+Drivers "1" --* "many: reports to" SupervisorDriver
+Tracking "many: references" -- "1: identified by" Roads
+
+' Component Relationships
+DriverMapView --> "renders directions with" MapViewDirections
+DriverMapView --> "displays" RouteCard
+DriverMapView --> "creates" SleepEvents : creates fatigue events
+DriverMapView --> "updates position in" Tracking : updates location data
+DriverMapView ..> "connects to device via" BLEModule : detects fatigue
+DriverMapView ..> "requests position from" LocationService : gets GPS coordinates
+
+ManagerMapView --> "reads current" Tracking : displays real-time position
+ManagerMapView --> "displays historical" SleepEvents : shows fatigue events
+ManagerMapView --> "renders" TruckCard : shows truck status
+
+TripCard ..> "displays" TripData : shows trip information
+TripDetail ..> "visualizes" TripData : shows detailed trip stats
+RouteCard ..> "shows" RouteData : displays route information
+
+DriverHistoryPage --> "lists" TripCard : shows trip history
+DriverHistoryPage --> "displays selected" TripDetail : shows trip details
+DriverHistoryPage ..> "manages" TripData : handles trip information
+
+ManagerHistoryPage --> "lists all drivers'" TripCard : shows fleet trips
+ManagerHistoryPage --> "displays selected" TripDetail : shows trip details
+ManagerHistoryPage ..> "manages" TripData : handles trip information
+
+RealtimePage --> "displays truck" TruckCard : shows active trucks
+RealtimePage ..> "uses" DriverData : displays driver information
+RealtimePage --> "navigates to" ManagerMapView : shows driver on map
+
+FleetSummaryPage ..> "analyzes" TripStatistics : processes fleet data
+FleetSummaryPage ..> "visualizes" FleetStats : displays statistics
+
+DriverMenuPage --> "presents options with" MenuCard : shows driver options
+ManagerOverview --> "presents options with" MenuCard : shows manager options
+
+DriverMapScreen --> "embeds" DriverMapView : displays trip map
+RealtimePage --> "links to" ManagerMapView : shows driver location
+
+' Service Connections
+SupabaseService ..> "manages" Drivers : stores driver data
+SupabaseService ..> "manages" Vehicles : stores vehicle data
+SupabaseService ..> "manages" Trips : stores trip data
+SupabaseService ..> "manages" Tracking : stores location data
+SupabaseService ..> "manages" SleepEvents : stores fatigue events
+SupabaseService ..> "manages" Supervisors : stores supervisor data
+SupabaseService ..> "manages" SupervisorDriver : stores assignments
+SupabaseService ..> "manages" TripStatistics : stores analytics
+SupabaseService ..> "manages" Roads : stores road data
+
+BLEModule ..> "detects" SleepEvents : identifies fatigue events
+BLEModule --> "implements" BluetoothLowEnergyApi : provides BLE functionality
+
+RoleSelectionPage --> "navigates to" DriverLogin : directs driver login
+RoleSelectionPage --> "navigates to" ManagerLogin : directs manager login
+
+note "CAMinhão - Freight Driver Fatigue Monitoring System" as AppTitle
+AppTitle .. DriverMapView
+AppTitle .. ManagerMapView
+
+@enduml
