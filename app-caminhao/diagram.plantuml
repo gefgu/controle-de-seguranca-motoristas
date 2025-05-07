@@ -381,7 +381,52 @@ interface Device {
 +connected: boolean
 }
 
+' Interface para dados de monitoramento ocular
+interface EyeData {
+  +timestamp: number
+  +leftEyeOpen: boolean
+  +rightEyeOpen: boolean
+  +blinkRate: number
+  +eyeClosedDuration: number
+  +attentionScore: number
 }
+
+}
+
+' Dispositivos de Hardware
+package "Hardware Devices" #Orange {
+  class RaspberryPi {
+    -model: string
+    -ipAddress: string
+    -connected: boolean
+    -sleepDetectionActive: boolean
+    -lastAlertTime: timestamp
+    +connect()
+    +disconnect()
+    +startMonitoring()
+    +stopMonitoring()
+    +processEyeData(eyeState: EyeData)
+    +detectFatigue(eyeClosedDuration: number)
+    +sendAlertToApp(alertLevel: string)
+    +sendDataToBracelet(command: string)
+    +getStatus()
+  }
+
+  class VibrationBracelet {
+    -id: string
+    -batteryLevel: number
+    -connected: boolean
+    -vibrationIntensity: number
+    -lastVibrationTime: timestamp
+    +connect()
+    +disconnect()
+    +vibrate(intensity: number, duration: number)
+    +checkBatteryLevel()
+    +getStatus()
+    +setPairingMode(active: boolean)
+  }
+}
+
 
 ' Database Relationships
 Drivers "1" --* "many: tracks trips of" Trips
@@ -482,6 +527,14 @@ CoordsObject --> "updates" LocationObject : provides coordinate details
 
 ' RouteData relationship
 RouteData --> "generates" Trips : creates trip records
+
+' Relacionamentos dos novos dispositivos
+RaspberryPi --> "controls" VibrationBracelet : sends vibration commands
+RaspberryPi --> "detects" SleepEvents : identifies sleep patterns
+RaspberryPi ..> "communicates with" BLEModule : sends alerts to app
+BLEModule ..> "receives data from" RaspberryPi : gets fatigue status
+DriverMapView ..> "connects to" RaspberryPi : receives real-time alerts
+VibrationBracelet ..> "alerts" Drivers : notifies of fatigue detection
 
 
 note "CAMinhão - Freight Driver Fatigue Monitoring System" as AppTitle
