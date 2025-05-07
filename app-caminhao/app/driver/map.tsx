@@ -13,7 +13,6 @@ import MapViewDirections from "react-native-maps-directions";
 import { Text, Button } from "@rneui/themed";
 import { Icon } from "@rneui/base";
 import RouteCard from "../../components/RouteCard";
-import { supabase } from "../../lib/supabase";
 import Loading from "../../components/Loading";
 
 const truck_icon = require("../../assets/truck_icon.png");
@@ -28,6 +27,18 @@ function format_waypoint_address(lat: number, lon: number) {
 
 const sleep_points = [{ latitude: -25.4207369, longitude: -49.2819641 }];
 
+// Mock data to replace Supabase call
+const MOCK_ROUTE_DATA = {
+  origin: "Curitiba",
+  origin_lat: -25.4284,
+  origin_lon: -49.2733,
+  driver: "João Silva",
+  id: "mock-route-1",
+  destination: "São Paulo",
+  destination_lat: -23.5505,
+  destination_lon: -46.6333,
+};
+
 type RouteData = {
   destination: string;
   destination_lat: number;
@@ -39,12 +50,12 @@ type RouteData = {
   origin_lon: number;
 };
 
+// Replace Supabase call with mock data
 async function getRoute(): Promise<RouteData> {
-  const { data, error, status } = await supabase
-    .from("routes")
-    .select("*")
-    .single();
-  return data as RouteData;
+  // Simulate network delay
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(MOCK_ROUTE_DATA), 500);
+  });
 }
 
 export default function DriverMapView() {
@@ -58,11 +69,28 @@ export default function DriverMapView() {
   const mapRef = useRef<MapView>(null);
 
   async function requestLocationPermissions() {
-    const { granted } = await requestForegroundPermissionsAsync();
+    try {
+      const { granted } = await requestForegroundPermissionsAsync();
 
-    if (granted) {
-      const currentPosition = await getCurrentPositionAsync();
-      setLocation(currentPosition);
+      if (granted) {
+        const currentPosition = await getCurrentPositionAsync();
+        setLocation(currentPosition);
+      }
+    } catch (error) {
+      console.log("Error requesting location permissions:", error);
+      // Use default location for demo if permissions fail
+      setLocation({
+        coords: {
+          latitude: -23.5505,
+          longitude: -46.6333,
+          altitude: null,
+          accuracy: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: 0,
+        },
+        timestamp: Date.now(),
+      });
     }
   }
 
@@ -71,7 +99,7 @@ export default function DriverMapView() {
   }, []);
 
   useEffect(() => {
-    watchPositionAsync(
+    const subscription = watchPositionAsync(
       {
         accuracy: LocationAccuracy.Highest,
         timeInterval: 1000,
@@ -84,7 +112,20 @@ export default function DriverMapView() {
           center: response.coords,
         });
       }
-    );
+    ).catch((error) => {
+      console.log("Error watching position:", error);
+    });
+
+    // Clean up subscription when component unmounts
+    return () => {
+      subscription
+        .then((sub) => {
+          if (sub) {
+            sub.remove();
+          }
+        })
+        .catch(() => {});
+    };
   }, []);
 
   useEffect(() => {
@@ -119,19 +160,20 @@ export default function DriverMapView() {
             },
           ]);
 
-          const { status, error } = await supabase.from("tracking").insert({
+          // Remove Supabase insert and just log to console
+          console.log("Sleep tracking point added", {
             driver: data.driver,
             lat: location.coords.latitude,
             lon: location.coords.longitude,
             speed: location.coords.speed,
             is_sleeping: isSleeping,
-            road_index: 2, // to be cleaned
           });
 
           setLastSleepTime(currentTime);
         }
       } else {
-        const { status, error } = await supabase.from("tracking").insert({
+        // Remove Supabase insert and just log to console
+        console.log("Regular tracking point added", {
           driver: data.driver,
           lat: location.coords.latitude,
           lon: location.coords.longitude,
