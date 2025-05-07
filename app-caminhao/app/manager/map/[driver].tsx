@@ -9,24 +9,17 @@ import { Icon, ListItem } from "@rneui/base";
 import { supabase } from "../../../lib/supabase";
 import Loading from "../../../components/Loading";
 import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
+import { loadRouteData, RoutePoint } from "../../../lib/routeData";
 
 // enableLatestRenderer();
 
 const truck_icon = require("../../../assets/truck_icon.png");
 const sleep_icon = require("../../../assets/sleep.png");
 
-const sleep_points = [{ latitude: -25.4207369, longitude: -49.2819641 }];
-
-async function getSleepPoints(driver_id: string): Promise<[SleepPoint]> {
-  const { data, error, status } = await supabase
-    .from("tracking")
-    .select("*")
-    .eq("driver", driver_id)
-    .eq("is_sleeping", true);
-  return data?.map((d: TrackingData) => {
-    return { latitude: d?.lat, longitude: d?.lon };
-  }) as any as [SleepPoint];
-}
+type SleepPoint = {
+  latitude: number;
+  longitude: number;
+};
 
 type TrackingData = {
   id: string;
@@ -38,114 +31,114 @@ type TrackingData = {
   is_sleeping: boolean;
 };
 
-type SleepPoint = {
-  latitude: number;
-  longitude: number;
-};
-
-async function getTrackingData(driver_id: string): Promise<TrackingData> {
-  const { data, error, status } = await supabase
-    .from("tracking")
-    .select("*")
-    .eq("driver", driver_id)
-    .order("time", { ascending: false })
-    .limit(1)
-    .single();
-  // console.log(data);
-  return data as TrackingData;
-}
-
 export default function DriverMapView() {
   const params = useLocalSearchParams();
   const driver_id = params["driver"] as string;
   const [data, setData] = useState<TrackingData | null>(null);
-  const [sleepPoints, setSleepPoints] = useState(sleep_points);
-  const [lastSleepPoint, setLastSleepPoint] = useState(sleep_points[0]);
-
-  useEffect(() => {
-    getTrackingData(driver_id).then((d) => setData(d));
-    getSleepPoints(driver_id).then((d) => setSleepPoints(d));
-    console.log(sleepPoints.length);
-
-    const sub = supabase
-      .channel("tracking_drivers")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "tracking",
-          filter: `driver=eq.${driver_id}`,
-        },
-        (d: any) => {
-          // console.log(d);
-          setData(d["new"]);
-          mapRef.current?.animateCamera({
-            pitch: 20,
-            center: { latitude: d["new"].lat, longitude: d["new"].lon },
-          });
-          if (d["new"].is_sleeping) {
-            setLastSleepPoint({
-              latitude: d["new"].lat as number,
-              longitude: d["new"].lon as number,
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      sub.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    setSleepPoints([...sleepPoints, lastSleepPoint]);
-  }, [lastSleepPoint]);
+  const [sleepPoints, setSleepPoints] = useState<SleepPoint[]>([]);
+  const [routePoints, setRoutePoints] = useState<RoutePoint[]>([]);
+  const [currentPointIndex, setCurrentPointIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const mapRef = useRef<MapView>(null);
 
-  if (!data) return <Loading />;
+  useEffect(() => {
+    const loadRoute = async () => {
+      const points = await loadRouteData();
+      setRoutePoints(points);
+
+      if (points.length > 0) {
+        // Set initial position
+        setData({
+          id: "demo-1",
+          driver: driver_id,
+          lat: points[0].lat,
+          lon: points[0].lon,
+          time: new Date().toISOString(),
+          speed: 60,
+          is_sleeping: false,
+        });
+        setLoading(false);
+      }
+    };
+
+    loadRoute();
+  }, []);
+
+  useEffect(() => {
+    if (routePoints.length === 0) return;
+
+    // Simulate movement along the route
+    const intervalId = setInterval(() => {
+      const nextIndex = (currentPointIndex + 1) % routePoints.length;
+      const point = routePoints[nextIndex];
+
+      // 0.01% chance of sleep point
+      const isSleeping = Math.random() < 0.0001;
+
+      // Update current location
+      setData({
+        id: `demo-${nextIndex}`,
+        driver: driver_id,
+        lat: point.lat,
+        lon: point.lon,
+        time: new Date().toISOString(),
+        speed: 60 + Math.floor(Math.random() * 20), // Random speed between 60-80
+        is_sleeping: isSleeping,
+      });
+
+      // Add a sleep point if detected
+      if (isSleeping) {
+        setSleepPoints((prevPoints) => [
+          ...prevPoints,
+          { latitude: point.lat, longitude: point.lon },
+        ]);
+      }
+
+      // Animate the map to follow the truck
+      mapRef.current?.animateCamera({
+        pitch: 20,
+        center: { latitude: point.lat, longitude: point.lon },
+      });
+
+      setCurrentPointIndex(nextIndex);
+    }, 1000); // Move every second
+
+    return () => clearInterval(intervalId);
+  }, [routePoints, currentPointIndex]);
+
+  if (loading || !data) return <Loading />;
 
   return (
     <View style={styles.container}>
-      {data && (
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={{
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={{
+          latitude: data.lat,
+          longitude: data.lon,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        }}
+        provider={PROVIDER_GOOGLE}
+      >
+        <Marker
+          coordinate={{
             latitude: data.lat,
             longitude: data.lon,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
           }}
-          // camera={{ pitch: 70, center: location.coords, heading: 0 }}
-          provider={PROVIDER_GOOGLE}
-        >
+          title={`Speed: ${data.speed}. Carga: Desconhecida`}
+          image={truck_icon}
+        />
+        {sleepPoints.map((p, index) => (
           <Marker
-            coordinate={{
-              latitude: data.lat,
-              longitude: data.lon,
-            }}
-            title={`Speed: ${data.speed}. Carga: Desconhecida`}
-            image={truck_icon}
+            key={`sleep-${index}`}
+            coordinate={{ latitude: p.latitude, longitude: p.longitude }}
+            image={sleep_icon}
+            title="Sonolência Detectada"
           />
-          {sleepPoints?.map((p, index) => (
-            <Marker
-              id={`${p.latitude}, ${p.longitude}`}
-              coordinate={{ latitude: p.latitude, longitude: p.longitude }}
-              image={sleep_icon}
-              title="Sonolência Detectada"
-              key={`${index} -> ${p.latitude}, ${p.longitude}`}
-            />
-          ))}
-        </MapView>
-      )}
-
-      {/* <RouteCard
-        origin_name={data.origin}
-        destination_name={data.destination}
-      /> */}
+        ))}
+      </MapView>
 
       <View style={styles.truck_map_card}>
         <Icon name="truck" type="font-awesome" size={48} />
@@ -153,6 +146,7 @@ export default function DriverMapView() {
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>
             Caminhão #1234
           </Text>
+          <Text>{`Velocidade: ${data.speed} km/h`}</Text>
         </View>
       </View>
     </View>
