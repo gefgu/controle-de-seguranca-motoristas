@@ -1,17 +1,6 @@
-INSERT INTO vehicles (license_plate, model, year, status) VALUES
-('ABC1234', 'Volvo FH 540', 2022, 'active'),
-('DEF5678', 'Scania R450', 2021, 'active'),
-('GHI9012', 'Mercedes-Benz Actros', 2023, 'active'),
-('JKL3456', 'DAF XF', 2020, 'maintenance'),
-('MNO7890', 'Volvo FH 460', 2022, 'active'),
-('PQR1234', 'Scania S730', 2023, 'active'),
-('STU5678', 'Mercedes-Benz Axor', 2019, 'maintenance'),
-('VWX9012', 'Iveco Stralis', 2021, 'inactive'),
-('YZA3456', 'MAN TGX', 2022, 'active'),
-('BCD7890', 'Volvo VM 330', 2020, 'active'),
-('EFG1234', 'Ford Cargo 2842', 2023, 'active'),
-('HIJ5678', 'Mercedes-Benz Atego', 2021, 'active'),
-('KLM9012', 'Scania P320', 2022, 'maintenance'),
-('NOP3456', 'Volvo FMX 500', 2023, 'active'),
-('QRS7890', 'DAF CF', 2020, 'active'),
-('TUV1234', 'Iveco Daily', 2021, 'inactive');
+INSERT INTO supervisors (name, email, phone) VALUES
+('Fernando Mendes', 'fernando.mendes@company.com', '+55 11 98765-0001'),
+('Roberta Almeida', 'roberta.almeida@company.com', '+55 21 98765-0002'),
+('Marcelo Santos', 'marcelo.santos@company.com', '+55 31 98765-0003'),
+('Patricia Oliveira', 'patricia.oliveira@company.com', '+55 41 98765-0004'),
+('Ricardo Costa', 'ricardo.costa@company.com', '+55 51 98765-0005');

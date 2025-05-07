@@ -345,15 +345,15 @@ interface BluetoothLowEnergyApi {
 }
 
 ' Database Relationships
-Drivers "1" --_ "many: tracks trips of" Trips
-Vehicles "1" --_ "many: used in" Trips
-Trips "1" --_ "many: generates" Tracking
-Drivers "1" --_ "many: has location" Tracking
-Vehicles "1" --_ "many: recorded in" Tracking
-Trips "1" --_ "many: contains" SleepEvents
-Drivers "1" --_ "many: experiences" SleepEvents
-Supervisors "1" --_ "many: supervises" SupervisorDriver
-Drivers "1" --\* "many: reports to" SupervisorDriver
+Drivers "1" --* "many: tracks trips of" Trips
+Vehicles "1" --* "many: used in" Trips
+Trips "1" --* "many: generates" Tracking
+Drivers "1" --* "many: has location" Tracking
+Vehicles "1" --* "many: recorded in" Tracking
+Trips "1" --* "many: contains" SleepEvents
+Drivers "1" --* "many: experiences" SleepEvents
+Supervisors "1" --* "many: supervises" SupervisorDriver
+Drivers "1" --* "many: reports to" SupervisorDriver
 Tracking "many: references" -- "1: identified by" Roads
 
 ' Component Relationships

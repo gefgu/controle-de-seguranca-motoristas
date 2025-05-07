@@ -40,11 +40,21 @@ type RouteData = {
 };
 
 async function getRoute(): Promise<RouteData> {
-  const { data, error, status } = await supabase
-    .from("routes")
-    .select("*")
-    .single();
-  return data as RouteData;
+  // const { data, error, status } = await supabase
+  //   .from("routes")
+  //   .select("*")
+  //   .single();
+  // return data as RouteData;
+  return {
+    destination: "São Paulo",
+    destination_lat: -23.5505,
+    destination_lon: -46.6333,
+    driver: "1234",
+    id: "1",
+    origin: "Curitiba",
+    origin_lat: -25.4284,
+    origin_lon: -49.2733,
+  };
 }
 
 export default function DriverMapView() {
