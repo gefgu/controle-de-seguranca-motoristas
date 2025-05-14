@@ -1,0 +1,170 @@
+@startuml CAMinhão - Instâncias do Sistema
+
+skinparam object {
+  BackgroundColor LightCyan
+  BorderColor DarkSlateGray
+  ArrowColor #33658a
+  AttributeFontColor Black
+  AttributeFontSize 11
+}
+
+skinparam note {
+  BackgroundColor LightYellow
+  BorderColor DarkGoldenRod
+}
+
+' Instâncias de Drivers
+object "motorista_1:Drivers" as motorista_1 {
+  id = 1
+  name = "João Silva"
+  license_number = "12345678900"
+  phone = "(11) 98765-4321"
+  email = "joao.silva@email.com"
+  status = "Em viagem"
+  date_hired = "2023-01-15"
+}
+
+object "motorista_2:Drivers" as motorista_2 {
+  id = 2
+  name = "Maria Souza"
+  license_number = "98765432100"
+  phone = "(11) 91234-5678"
+  email = "maria.souza@email.com"
+  status = "Disponível"
+  date_hired = "2022-11-10"
+}
+
+' Instâncias de Vehicles
+object "veiculo_1:Vehicles" as veiculo_1 {
+  id = 1
+  license_plate = "ABC1D23"
+  model = "Volvo FH 540"
+  year = 2022
+  status = "Em uso"
+}
+
+object "veiculo_2:Vehicles" as veiculo_2 {
+  id = 2
+  license_plate = "XYZ9W87"
+  model = "Scania R450"
+  year = 2023
+  status = "Em manutenção"
+}
+
+' Instância de Trip
+object "viagem_1:Trips" as viagem_1 {
+  id = 1
+  driver_id = 1
+  vehicle_id = 1
+  origin_name = "São Paulo, SP"
+  origin_lat = -23.550520
+  origin_lon = -46.633308
+  destination_name = "Rio de Janeiro, RJ"
+  destination_lat = -22.906847
+  destination_lon = -43.172897
+  distance = 435.5
+  start_time = "2023-10-15 07:30:00"
+  end_time = null
+  status = "Em andamento"
+}
+
+' Instâncias de Tracking
+object "rastreamento_1:Tracking" as rastreamento_1 {
+  id = 1
+  driver_id = 1
+  trip_id = 1
+  vehicle_id = 1
+  lat = -22.984337
+  lon = -44.304358
+  speed = 78.5
+  is_sleeping = false
+  road_index = 3
+  timestamp = "2023-10-15 10:15:32"
+}
+
+' Instância de SleepEvent
+object "evento_sono_1:SleepEvents" as evento_sono_1 {
+  id = 1
+  trip_id = 1
+  driver_id = 1
+  lat = -22.946782
+  lon = -44.237456
+  start_time = "2023-10-15 09:45:12"
+  end_time = "2023-10-15 09:45:42"
+  duration = "00:00:30"
+  severity = "Moderado"
+}
+
+' Dispositivos
+object "raspberry_1:RaspberryPi" as raspberry_1 {
+  model = "Raspberry Pi 4"
+  ipAddress = "192.168.1.10"
+  connected = true
+  sleepDetectionActive = true
+  lastAlertTime = "2023-10-15 09:45:12"
+}
+
+object "pulseira_1:VibrationBracelet" as pulseira_1 {
+  id = "BR001"
+  batteryLevel = 85
+  connected = true
+  vibrationIntensity = 2
+  lastVibrationTime = "2023-10-15 09:45:12"
+}
+
+' Instância do Supervisor
+object "supervisor_1:Supervisors" as supervisor_1 {
+  id = 1
+  name = "Carlos Mendes"
+  email = "carlos.mendes@empresa.com"
+  phone = "(11) 98888-7777"
+}
+
+' Instância da estrada
+object "rodovia_1:Roads" as rodovia_1 {
+  road_id = "BR-116"
+  road_index = 3
+  name = "Rodovia Presidente Dutra"
+  lat = -22.959083
+  lon = -44.279361
+}
+
+' Estatísticas de viagem
+object "estatistica_1:TripStatistics" as estatistica_1 {
+  id = 1
+  month = 10
+  year = 2023
+  total_trips = 45
+  total_distance = 18750.2
+  average_trip_duration = "08:45:30"
+  total_sleep_events = 8
+  critical_sleep_incidents = 1
+}
+
+' Relacionamentos
+motorista_1 -- viagem_1 : realiza >
+veiculo_1 -- viagem_1 : utilizado em >
+viagem_1 -- rastreamento_1 : gera >
+viagem_1 -- evento_sono_1 : contém >
+motorista_1 -- evento_sono_1 : experimenta >
+motorista_1 -- rastreamento_1 : localizado em >
+veiculo_1 -- rastreamento_1 : registrado em >
+supervisor_1 -- motorista_1 : supervisiona >
+rastreamento_1 -- rodovia_1 : localizado em >
+raspberry_1 -- pulseira_1 : controla >
+raspberry_1 -- evento_sono_1 : detecta >
+pulseira_1 -- motorista_1 : alerta >
+
+note right of evento_sono_1
+  Este evento de sonolência foi 
+  detectado pelo Raspberry Pi
+  e acionou a pulseira vibratória
+end note
+
+note bottom of viagem_1
+  Viagem em andamento
+  São Paulo → Rio de Janeiro
+  Via Rodovia Presidente Dutra
+end note
+
+@enduml
