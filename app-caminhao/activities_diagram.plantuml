@@ -1,0 +1,179 @@
+@startuml CAMinhão - Diagrama de Atividades
+
+!theme plain
+skinparam ActivityBackgroundColor #E8F4FD
+skinparam ActivityBorderColor #1976D2
+skinparam ActivityFontColor Black
+skinparam ActivityFontSize 11
+skinparam PartitionBackgroundColor #F5F5F5
+skinparam PartitionBorderColor #757575
+skinparam ArrowColor #1976D2
+skinparam ArrowThickness 2
+
+title CAMinhão - Sistema de Monitoramento de Fadiga do Motorista\nDiagrama de Atividades
+
+start
+
+:Usuário abre o app CAMinhão;
+
+:Seleciona tipo de usuário;
+
+if (Tipo selecionado?) then (Gestor)
+  partition "Fluxo do Gestor" {
+    :Navega para Login do Gestor;
+    :Autentica com Google;
+    
+    if (Autenticação bem-sucedida?) then (Sim)
+      :Navega para Visão Geral do Gestor;
+      
+      repeat
+        :Escolhe ação;
+        
+        switch (Ação selecionada?)
+        case (Status em Tempo Real)
+          :Visualiza Página em Tempo Real;
+          :Exibe lista de motoristas ativos;
+          :Mostra status do motorista (Alerta/Atenção/Sonolência);
+          
+          if (Motorista selecionado?) then (Sim)
+            :Navega para Visualização do Mapa do Motorista;
+            :Carrega dados da rota;
+            :Exibe localização do motorista;
+            :Mostra pontos de sono no mapa;
+            :Monitora movimento em tempo real;
+          endif
+          
+        case (Histórico de Viagens)
+          :Visualiza Página de Histórico do Gestor;
+          :Carrega todas as viagens da frota;
+          :Exibe cartões de viagem com nomes dos motoristas;
+          
+          if (Viagem selecionada?) then (Sim)
+            :Mostra Detalhes da Viagem;
+            :Exibe mapa da rota;
+            :Mostra eventos de sono;
+            :Exibe estatísticas da viagem;
+          endif
+          
+        case (Resumo da Frota)
+          :Visualiza Página de Resumo da Frota;
+          :Calcula estatísticas da frota;
+          :Exibe tendências mensais;
+          :Mostra análise de eventos de sono;
+          :Gera recomendações de segurança;
+          
+        endswitch
+        
+      repeat while (Continuar gerenciando?) is (Sim)
+      
+    else (Não)
+      :Exibe mensagem de erro;
+      stop
+    endif
+  }
+  
+else (Motorista)
+  partition "Fluxo do Motorista" {
+    :Navega para Login do Motorista;
+    :Autentica com Google;
+    
+    if (Autenticação bem-sucedida?) then (Sim)
+      :Navega para Menu do Motorista;
+      
+      repeat
+        :Escolhe ação;
+        
+        switch (Ação selecionada?)
+        case (Iniciar Viagem)
+          :Navega para Tela de Mapa do Motorista;
+          :Solicita permissões de localização;
+          
+          if (Permissões concedidas?) then (Sim)
+            :Obtém localização GPS atual;
+            :Carrega dados da rota;
+            :Conecta ao Raspberry Pi;
+            
+            if (Raspberry Pi conectado?) then (Sim)
+              :Inicia monitoramento da viagem;
+              :Exibe mapa com rota;
+              :Mostra localização atual;
+              
+              repeat
+                :Atualiza coordenadas GPS;
+                :Envia localização para Supabase;
+                :Lê dados de fadiga do Raspberry Pi;
+                
+                if (Fadiga detectada?) then (Sim)
+                  :Cria registro de evento de sono;
+                  :Adiciona ponto de sono ao mapa;
+                  :Aciona pulseira de vibração;
+                  :Envia alerta ao sistema de gestão;
+                endif
+                
+              repeat while (Viagem em andamento?) is (Sim)
+              
+              :Finaliza viagem;
+              :Salva dados finais da viagem;
+              
+            else (Não)
+              :Mostra erro de conexão;
+              :Permite início manual da viagem;
+            endif
+            
+          else (Não)
+            :Mostra erro de permissão;
+            :Solicita permissões novamente;
+          endif
+          
+        case (Ver Histórico)
+          :Navega para Página de Histórico do Motorista;
+          :Carrega histórico de viagens do motorista;
+          :Exibe cartões de viagem;
+          
+          if (Viagem selecionada?) then (Sim)
+            :Mostra Detalhes da Viagem;
+            :Exibe mapa da rota;
+            :Mostra eventos de sono pessoais;
+            :Exibe estatísticas da viagem;
+          endif
+          
+        endswitch
+        
+      repeat while (Continuar usando app?) is (Sim)
+      
+    else (Não)
+      :Exibe mensagem de erro;
+      stop
+    endif
+  }
+endif
+
+partition "Processos em Segundo Plano" {
+  fork
+    :Raspberry Pi monitora movimento dos olhos;
+    :Processa dados de rastreamento ocular;
+    
+    if (Olhos fechados > limite?) then (Sim)
+      :Detecta evento de fadiga;
+      :Envia alerta ao app via BLE;
+      :Ativa pulseira de vibração;
+    endif
+    
+  fork again
+    :Sincronização de dados em tempo real;
+    :Atualiza banco de dados Supabase;
+    :Transmite atualizações de localização;
+    
+  fork again
+    :Gera estatísticas de viagens;
+    :Calcula métricas da frota;
+    :Atualiza relatórios mensais;
+    
+  end fork
+}
+
+:Usuário sai da aplicação;
+
+stop
+
+@enduml
