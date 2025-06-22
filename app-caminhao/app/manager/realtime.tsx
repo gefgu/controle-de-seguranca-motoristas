@@ -1,4 +1,11 @@
-import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { styles } from "../../styles";
 import { useState, useEffect } from "react";
 import { router } from "expo-router";
@@ -6,8 +13,18 @@ import { Icon } from "@rneui/base";
 import TruckCard from "../../components/TruckCard";
 import { Card } from "@rneui/themed";
 import { supabase } from "../../lib/supabase";
+import * as Notifications from "expo-notifications";
 
 const bg_image = require("../../assets/bg.png");
+
+// Configure notification behavior
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 // Sample data for other drivers (static)
 const OTHER_DRIVERS = [
@@ -60,6 +77,18 @@ export default function RealtimePage() {
     { status: 3, label: "Sonolência Detectada", color: "#E74C3C" },
   ];
 
+  // Request notification permissions
+  useEffect(() => {
+    const requestNotificationPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Notification permissions not granted");
+      }
+    };
+
+    requestNotificationPermissions();
+  }, []);
+
   useEffect(() => {
     // Set up real-time subscription for João Silva's tracking data from tracking_sample table
     const subscription = supabase
@@ -72,7 +101,7 @@ export default function RealtimePage() {
           table: "tracking_sample",
           filter: "driver=eq.João Silva",
         },
-        (payload) => {
+        async (payload) => {
           console.log(
             "Real-time tracking update from tracking_sample:",
             payload
@@ -102,6 +131,48 @@ export default function RealtimePage() {
             );
             return [updatedDriver, ...otherDrivers];
           });
+
+          // Show notification if sleep detected
+          if (trackingData.is_sleeping) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "🚨 ALERTA DE SONOLÊNCIA",
+                body: `${trackingData.driver} apresentou sinais de sonolência! Verifique sua localização imediatamente.`,
+                data: {
+                  driver: trackingData.driver,
+                  lat: trackingData.lat,
+                  lon: trackingData.lon,
+                  timestamp: trackingData.time,
+                },
+                sound: "default",
+              },
+              trigger: null, // Show immediately
+            });
+
+            // Also show an alert in the app
+            Alert.alert(
+              "🚨 SONOLÊNCIA DETECTADA",
+              `${
+                trackingData.driver
+              } apresentou sinais de sonolência!\n\nVelocidade: ${Math.round(
+                trackingData.speed
+              )} km/h\nLocalização: ${trackingData.lat.toFixed(
+                4
+              )}, ${trackingData.lon.toFixed(4)}`,
+              [
+                {
+                  text: "Ver no Mapa",
+                  onPress: () => router.push(`/manager/map/joao-silva`),
+                  style: "default",
+                },
+                {
+                  text: "OK",
+                  style: "cancel",
+                },
+              ],
+              { cancelable: false }
+            );
+          }
         }
       )
       .subscribe();
@@ -244,6 +315,9 @@ export default function RealtimePage() {
                   margin: 0,
                   marginBottom: 16,
                   overflow: "hidden",
+                  // Add red border for sleeping drivers
+                  borderWidth: driver.is_sleeping ? 3 : 0,
+                  borderColor: driver.is_sleeping ? "#E74C3C" : "transparent",
                 }}
               >
                 <TouchableOpacity
@@ -266,20 +340,12 @@ export default function RealtimePage() {
                         : driver.status === 2
                         ? "#F39C12"
                         : "#2ECC71",
+                    // Add blinking background for sleeping drivers
+                    backgroundColor: driver.is_sleeping
+                      ? "rgba(231, 76, 60, 0.1)"
+                      : "transparent",
                   }}
                 >
-                  {/* Truck icon and status */}
-                  <View
-                    style={{
-                      marginRight: 12,
-                      marginBottom: 8,
-                      flexBasis: 60,
-                      alignSelf: "flex-start",
-                    }}
-                  >
-                    {/* <TruckCard status={driver.status} driver_id={driver.id} /> */}
-                  </View>
-
                   {/* Driver info section */}
                   <View
                     style={{
@@ -305,6 +371,48 @@ export default function RealtimePage() {
                       >
                         {driver.name}
                       </Text>
+                      {driver.id === "joao-silva-real" && (
+                        <View
+                          style={{
+                            backgroundColor: "#4CAF50",
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: 12,
+                            marginLeft: 8,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "white",
+                              fontSize: 10,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            AO VIVO
+                          </Text>
+                        </View>
+                      )}
+                      {driver.is_sleeping && (
+                        <View
+                          style={{
+                            backgroundColor: "#E74C3C",
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: 12,
+                            marginLeft: 8,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "white",
+                              fontSize: 10,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            🚨 SONOLENTO
+                          </Text>
+                        </View>
+                      )}
                     </View>
                     <Text
                       style={{

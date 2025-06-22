@@ -15,6 +15,7 @@ import { Icon } from "@rneui/base";
 import RouteCard from "../../components/RouteCard";
 import Loading from "../../components/Loading";
 import { supabase } from "../../lib/supabase";
+import * as Notifications from "expo-notifications";
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
@@ -22,11 +23,20 @@ const bg_image = require("../../assets/bg.png");
 const GOOGLE_MAPS_DIRECTIONS_API_KEY =
   process.env.GOOGLE_MAPS_DIRECTIONS_API_KEY;
 
+// Configure notification behavior
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 function format_waypoint_address(lat: number, lon: number) {
   return `${lat},${lon}`;
 }
 
-const sleep_points = [{ latitude: -25.4207369, longitude: -49.2819641 }];
+const sleep_points = [];
 
 // Mock data to replace Supabase call
 const MOCK_ROUTE_DATA = {
@@ -94,6 +104,18 @@ export default function DriverMapView() {
       });
     }
   }
+
+  // Request notification permissions
+  useEffect(() => {
+    const requestNotificationPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Notification permissions not granted");
+      }
+    };
+
+    requestNotificationPermissions();
+  }, []);
 
   useEffect(() => {
     requestLocationPermissions();
@@ -210,9 +232,63 @@ export default function DriverMapView() {
     return () => clearInterval(intervalId);
   }, [location, data, isSleeping, lastSleepTime, sleepPoints]);
 
+  // Function to send immediate sleep notification and tracking
+  const triggerSleepEvent = async () => {
+    if (!data || !location) return;
+
+    try {
+      // Add sleep point to local state immediately
+      const newSleepPoint = {
+        latitude: location.coords.latitude as number,
+        longitude: location.coords.longitude as number,
+      };
+
+      setSleepPoints((prev) => [...prev, newSleepPoint]);
+
+      // Insert immediate sleep tracking point to database
+      const { error } = await supabase.from("tracking_sample").insert({
+        driver: data.driver,
+        lat: location.coords.latitude,
+        lon: location.coords.longitude,
+        speed: location.coords.speed || 0,
+        is_sleeping: true,
+        time: new Date().toISOString(),
+      });
+
+      if (error) {
+        console.error("Error inserting immediate sleep tracking:", error);
+      } else {
+        console.log("Immediate sleep event recorded");
+
+        // Send local notification
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "⚠️ Sonolência Detectada",
+            body: `${data.driver} apresentou sinais de sonolência. Localização registrada.`,
+            data: {
+              driver: data.driver,
+              lat: location.coords.latitude,
+              lon: location.coords.longitude,
+              timestamp: new Date().toISOString(),
+            },
+          },
+          trigger: null, // Show immediately
+        });
+      }
+    } catch (error) {
+      console.error("Error triggering sleep event:", error);
+    }
+  };
+
   // Toggle sleep status for testing
-  const toggleSleepStatus = () => {
-    setIsSleeping(!isSleeping);
+  const toggleSleepStatus = async () => {
+    const newSleepingState = !isSleeping;
+    setIsSleeping(newSleepingState);
+
+    // If switching to sleeping state, trigger immediate sleep event
+    if (newSleepingState) {
+      await triggerSleepEvent();
+    }
   };
 
   if (isConnecting) {
