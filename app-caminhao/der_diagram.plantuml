@@ -1,0 +1,226 @@
+@startuml DER - CAMinhão Sistema de Monitoramento
+
+!theme plain
+skinparam entity {
+  BackgroundColor #E8F4FD
+  BorderColor #1976D2
+  FontColor Black
+}
+
+skinparam relationship {
+  LineColor #1976D2
+  LineThickness 2
+}
+
+skinparam note {
+  BackgroundColor #FFF9C4
+  BorderColor #F57F17
+}
+
+title DER - CAMinhão\nSistema de Monitoramento de Fadiga do Motorista
+
+entity "Motoristas" as drivers {
+  * id : BIGINT <<PK>>
+  --
+  * nome : TEXT
+  * numero_carteira : TEXT <<UK>>
+  telefone : TEXT
+  email : TEXT
+  status : TEXT
+  data_contratacao : DATE
+  criado_em : TIMESTAMP
+}
+
+entity "Veiculos" as vehicles {
+  * id : BIGINT <<PK>>
+  --
+  * placa : TEXT <<UK>>
+  modelo : TEXT
+  ano : INTEGER
+  status : TEXT
+  criado_em : TIMESTAMP
+}
+
+entity "Viagens" as trips {
+  * id : BIGINT <<PK>>
+  --
+  * motorista_id : BIGINT <<FK>>
+  veiculo_id : BIGINT <<FK>>
+  * nome_origem : TEXT
+  * latitude_origem : DOUBLE
+  * longitude_origem : DOUBLE
+  * nome_destino : TEXT
+  * latitude_destino : DOUBLE
+  * longitude_destino : DOUBLE
+  distancia : DOUBLE
+  hora_inicio : TIMESTAMP
+  hora_fim : TIMESTAMP
+  status : TEXT
+  descricao : TEXT
+  criado_em : TIMESTAMP
+}
+
+entity "Rastreamento" as tracking {
+  * id : BIGINT <<PK>>
+  --
+  * motorista_id : BIGINT <<FK>>
+  viagem_id : BIGINT <<FK>>
+  veiculo_id : BIGINT <<FK>>
+  * latitude : DOUBLE
+  * longitude : DOUBLE
+  velocidade : DOUBLE
+  esta_dormindo : BOOLEAN
+  indice_estrada : INTEGER
+  timestamp : TIMESTAMP
+}
+
+entity "Eventos_Sono" as sleep_events {
+  * id : BIGINT <<PK>>
+  --
+  * viagem_id : BIGINT <<FK>>
+  * motorista_id : BIGINT <<FK>>
+  * latitude : DOUBLE
+  * longitude : DOUBLE
+  * hora_inicio : TIMESTAMP
+  hora_fim : TIMESTAMP
+  duracao : INTERVAL
+  severidade : TEXT
+  criado_em : TIMESTAMP
+}
+
+entity "Supervisores" as supervisors {
+  * id : BIGINT <<PK>>
+  --
+  * nome : TEXT
+  * email : TEXT <<UK>>
+  telefone : TEXT
+  criado_em : TIMESTAMP
+}
+
+entity "Supervisor_Motorista" as supervisor_driver {
+  * supervisor_id : BIGINT <<FK,PK>>
+  * motorista_id : BIGINT <<FK,PK>>
+  --
+  data_atribuicao : TIMESTAMP
+}
+
+entity "Estradas" as roads {
+  * estrada_id : TEXT <<PK>>
+  * indice_estrada : INTEGER <<PK>>
+  --
+  nome : TEXT
+  * latitude : DOUBLE
+  * longitude : DOUBLE
+}
+
+entity "Estatisticas_Viagem" as trip_statistics {
+  * id : BIGINT <<PK>>
+  --
+  * mes : INTEGER
+  * ano : INTEGER
+  total_viagens : INTEGER
+  distancia_total : DOUBLE
+  duracao_media_viagem : INTERVAL
+  total_eventos_sono : INTEGER
+  incidentes_criticos_sono : INTEGER
+  criado_em : TIMESTAMP
+}
+
+entity "Rotas" as routes {
+  * id : BIGINT <<PK>>
+  --
+  * motorista : TEXT
+  origem : TEXT
+  latitude_origem : DOUBLE
+  longitude_origem : DOUBLE
+  destino : TEXT
+  latitude_destino : DOUBLE
+  longitude_destino : DOUBLE
+  criado_em : TIMESTAMP
+}
+
+' Relacionamentos principais
+drivers ||--o{ trips : "realiza"
+vehicles ||--o{ trips : "utilizado_em"
+trips ||--o{ tracking : "gera"
+drivers ||--o{ tracking : "tem_localizacao"
+vehicles ||--o{ tracking : "registrado_em"
+trips ||--o{ sleep_events : "contem"
+drivers ||--o{ sleep_events : "experimenta"
+
+' Relacionamento N:N entre supervisores e motoristas
+supervisors ||--o{ supervisor_driver : "supervisiona"
+drivers ||--o{ supervisor_driver : "reporta_para"
+
+' Relacionamento com estradas
+tracking }o--|| roads : "localizado_em"
+
+' Relacionamento com rotas (usado no app)
+drivers ||--o{ routes : "tem_rota_atribuida"
+
+' Notas sobre restrições e domínios
+note right of drivers
+  **Domínios:**
+  status ∈ {'active', 'inactive', 'on_trip'}
+  
+  **Índices:**
+  - numero_carteira (UNIQUE)
+  - email
+end note
+
+note right of vehicles
+  **Domínios:**
+  status ∈ {'active', 'maintenance', 'inactive'}
+  
+  **Índices:**
+  - placa (UNIQUE)
+end note
+
+note right of trips
+  **Domínios:**
+  status ∈ {'planned', 'in_progress', 'completed', 'cancelled'}
+  
+  **Regras de negócio:**
+  - hora_fim deve ser posterior a hora_inicio
+  - distancia deve ser positiva
+end note
+
+note right of sleep_events
+  **Domínios:**
+  severidade ∈ {'low', 'medium', 'high', 'critical'}
+  
+  **Regras de negócio:**
+  - hora_fim deve ser posterior a hora_inicio
+  - duracao calculada automaticamente
+end note
+
+note bottom of trip_statistics
+  **Restrições:**
+  - Combinação (mes, ano) única
+  - mes ∈ [1, 12]
+  - ano ≥ 2020
+  
+  **Utilizado para:**
+  - Relatórios gerenciais
+  - Análise de tendências
+  - Dashboard da frota
+end note
+
+note bottom of roads
+  **Utilização:**
+  - Referência geográfica
+  - Mapeamento de rotas
+  - Análise de pontos críticos
+  
+  **Chave composta:**
+  (estrada_id, indice_estrada)
+end note
+
+note left of routes
+  **Tabela auxiliar utilizada no app**
+  - Armazena rotas ativas
+  - Utilizada pela tela do motorista
+  - Dados temporários de navegação
+end note
+
+@enduml
