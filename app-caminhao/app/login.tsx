@@ -1,9 +1,20 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  Image,
+} from "react-native";
 import { styles } from "../styles";
 import { Button } from "@rneui/themed";
 import { supabase } from "../lib/supabase";
 import { useState, useEffect } from "react";
 import { router, useLocalSearchParams } from "expo-router";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 
 const bg_image = require("../assets/bg.png");
 const google_icon = require("../assets/google_icon.png");
@@ -17,6 +28,18 @@ export default function LoginPage() {
       // If no valid role is provided, go back to the role selection
       router.replace("/");
     }
+
+    // Configure Google Sign-In
+    GoogleSignin.configure({
+      scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+      webClientId:
+        "122332547153-as5siuc9haa7tg9mc2s0oam0fgb3851u.apps.googleusercontent.com",
+      offlineAccess: true,
+      hostedDomain: "",
+      forceCodeForRefreshToken: true,
+      accountName: "",
+      googleServicePlistPath: "",
+    });
   }, [role]);
 
   const getRoleDestination = () => {
@@ -25,46 +48,90 @@ export default function LoginPage() {
     return "/";
   };
 
+  // Temporary bypass function for development
+  const handleTemporaryBypass = () => {
+    Alert.alert(
+      "Desenvolvimento",
+      "Google Sign-In em configuração. Prosseguir temporariamente?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Prosseguir",
+          onPress: () => {
+            console.log("Bypassing authentication for development");
+            router.push(getRoleDestination());
+          },
+        },
+      ]
+    );
+  };
+
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
 
-      // For demo purposes - simulating login and redirecting based on role
-      setTimeout(() => {
-        setLoading(false);
-        router.push(getRoleDestination());
-      }, 1500);
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
 
-      // In a real implementation with Supabase:
-      // await supabase.auth.signInWithOAuth({
-      //   provider: 'google',
-      //   options: {
-      //     redirectTo: 'your-app-scheme://login-callback',
-      //     queryParams: {
-      //       role: role as string,
-      //     },
-      //   },
-      // });
-    } catch (error) {
+      if (userInfo.data?.idToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: userInfo.data.idToken,
+        });
+
+        if (error) {
+          console.error("Error logging in:", error);
+          Alert.alert("Error", error.message);
+          setLoading(false);
+          return;
+        }
+
+        console.log("Successfully signed in:", data.user);
+        router.push(getRoleDestination());
+      } else {
+        throw new Error("No ID token present!");
+      }
+    } catch (error: any) {
       console.error("Error logging in:", error);
       setLoading(false);
+
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("User cancelled sign-in");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("Sign-in already in progress");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert("Error", "Google Play Services not available");
+      } else if (error.message === "DEVELOPER_ERROR") {
+        // Handle DEVELOPER_ERROR specifically
+        Alert.alert(
+          "Configuração em Andamento",
+          "Google Sign-In ainda está sendo configurado. Deseja prosseguir temporariamente?",
+          [
+            { text: "Tentar Novamente", onPress: () => handleGoogleLogin() },
+            { text: "Prosseguir", onPress: handleTemporaryBypass },
+          ]
+        );
+      } else {
+        // For any other error, offer to proceed
+        Alert.alert(
+          "Erro de Autenticação",
+          "Ocorreu um erro no login. Deseja prosseguir temporariamente?",
+          [
+            { text: "Tentar Novamente", onPress: () => handleGoogleLogin() },
+            { text: "Prosseguir", onPress: handleTemporaryBypass },
+          ]
+        );
+      }
     }
   };
 
-  const roleText = role === "manager" ? "Gerente" : "Motorista";
+  // Define a user-friendly text for the role
+  const roleText =
+    role === "manager" ? "Gestor" : role === "driver" ? "Motorista" : "usuário";
 
   return (
     <View style={styles.container}>
       <Image source={bg_image} resizeMode="center" />
-
-      <View
-        style={{
-          position: "absolute",
-          backgroundColor: "rgba(255, 255, 255, 0.5)",
-          width: "100%",
-          height: "100%",
-        }}
-      />
 
       <View style={loginStyles.contentContainer}>
         <View style={loginStyles.headerContainer}>
@@ -83,6 +150,16 @@ export default function LoginPage() {
             <Image source={google_icon} style={loginStyles.googleIcon} />
             <Text style={loginStyles.googleButtonText}>
               {loading ? "Conectando..." : "Entrar com Google"}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Add a temporary bypass button for development */}
+          <TouchableOpacity
+            style={loginStyles.bypassButton}
+            onPress={handleTemporaryBypass}
+          >
+            <Text style={loginStyles.bypassButtonText}>
+              Prosseguir sem Login (Dev)
             </Text>
           </TouchableOpacity>
 
@@ -150,6 +227,21 @@ const loginStyles = StyleSheet.create({
     fontSize: 16,
     color: "#444",
     fontFamily: "JosefinSans-Bold",
+  },
+  bypassButton: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    width: "100%",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  bypassButtonText: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "JosefinSans-Regular",
   },
   loadingContainer: {
     marginTop: 10,

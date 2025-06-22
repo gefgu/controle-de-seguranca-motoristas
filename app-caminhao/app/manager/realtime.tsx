@@ -5,18 +5,12 @@ import { router } from "expo-router";
 import { Icon } from "@rneui/base";
 import TruckCard from "../../components/TruckCard";
 import { Card } from "@rneui/themed";
+import { supabase } from "../../lib/supabase";
 
 const bg_image = require("../../assets/bg.png");
 
-// Sample data for active drivers
-const ACTIVE_DRIVERS = [
-  {
-    id: "1234",
-    name: "João Silva",
-    status: 1,
-    location: "São Paulo → Curitiba",
-    lastUpdate: "2 min atrás",
-  },
+// Sample data for other drivers (static)
+const OTHER_DRIVERS = [
   {
     id: "5678",
     name: "Maria Oliveira",
@@ -40,8 +34,24 @@ const ACTIVE_DRIVERS = [
   },
 ];
 
+// Type for real-time driver data
+type RealTimeDriver = {
+  id: string;
+  name: string;
+  status: number;
+  location: string;
+  lastUpdate: string;
+  lat?: number;
+  lon?: number;
+  speed?: number;
+  is_sleeping?: boolean;
+};
+
 export default function RealtimePage() {
-  const [activeDrivers, setActiveDrivers] = useState(ACTIVE_DRIVERS);
+  const [realTimeDriver, setRealTimeDriver] = useState<RealTimeDriver | null>(
+    null
+  );
+  const [allDrivers, setAllDrivers] = useState<RealTimeDriver[]>(OTHER_DRIVERS);
 
   // Status descriptions for legend
   const statuses = [
@@ -49,6 +59,113 @@ export default function RealtimePage() {
     { status: 2, label: "Atenção", color: "#F39C12" },
     { status: 3, label: "Sonolência Detectada", color: "#E74C3C" },
   ];
+
+  useEffect(() => {
+    // Set up real-time subscription for João Silva's tracking data from tracking_sample table
+    const subscription = supabase
+      .channel("tracking-sample-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "tracking_sample",
+          filter: "driver=eq.João Silva",
+        },
+        (payload) => {
+          console.log(
+            "Real-time tracking update from tracking_sample:",
+            payload
+          );
+
+          const trackingData = payload.new;
+
+          // Update João Silva's data with real-time info
+          const updatedDriver: RealTimeDriver = {
+            id: "joao-silva-real",
+            name: "João Silva",
+            status: trackingData.is_sleeping ? 3 : 1, // 3 if sleeping, 1 if alert
+            location: "Curitiba → São Paulo (Real-time)",
+            lastUpdate: "Agora mesmo",
+            lat: trackingData.lat,
+            lon: trackingData.lon,
+            speed: trackingData.speed,
+            is_sleeping: trackingData.is_sleeping,
+          };
+
+          setRealTimeDriver(updatedDriver);
+
+          // Update the combined drivers list
+          setAllDrivers((prevDrivers) => {
+            const otherDrivers = prevDrivers.filter(
+              (d) => d.id !== "joao-silva-real"
+            );
+            return [updatedDriver, ...otherDrivers];
+          });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Get the most recent tracking data for João Silva on component mount
+  useEffect(() => {
+    const fetchLatestTracking = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("tracking_sample")
+          .select("*")
+          .eq("driver", "João Silva")
+          .order("time", { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error(
+            "Error fetching latest tracking from tracking_sample:",
+            error
+          );
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const trackingData = data[0];
+
+          const updatedDriver: RealTimeDriver = {
+            id: "joao-silva-real",
+            name: "João Silva",
+            status: trackingData.is_sleeping ? 3 : 1,
+            location: "Curitiba → São Paulo (Real-time)",
+            lastUpdate:
+              new Date(trackingData.time).toLocaleTimeString("pt-BR") +
+              " atrás",
+            lat: trackingData.lat,
+            lon: trackingData.lon,
+            speed: trackingData.speed,
+            is_sleeping: trackingData.is_sleeping,
+          };
+
+          setRealTimeDriver(updatedDriver);
+          setAllDrivers((prevDrivers) => {
+            const otherDrivers = prevDrivers.filter(
+              (d) => d.id !== "joao-silva-real"
+            );
+            return [updatedDriver, ...otherDrivers];
+          });
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching tracking data from tracking_sample:",
+          error
+        );
+      }
+    };
+
+    fetchLatestTracking();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -83,7 +200,7 @@ export default function RealtimePage() {
             marginBottom: 20,
           }}
         >
-          {activeDrivers.length} motoristas em atividade
+          {allDrivers.length} motoristas em atividade
         </Text>
 
         {/* Status legend */}
@@ -118,7 +235,7 @@ export default function RealtimePage() {
 
         <ScrollView>
           <View style={{ gap: 16 }}>
-            {activeDrivers.map((driver) => (
+            {allDrivers.map((driver) => (
               <Card
                 key={driver.id}
                 containerStyle={{
@@ -130,7 +247,13 @@ export default function RealtimePage() {
                 }}
               >
                 <TouchableOpacity
-                  onPress={() => router.push(`/manager/map/${driver.id}`)}
+                  onPress={() => {
+                    if (driver.id === "joao-silva-real") {
+                      router.push(`/manager/map/joao-silva`);
+                    } else {
+                      router.push(`/manager/map/${driver.id}`);
+                    }
+                  }}
                   style={{
                     flexDirection: "row",
                     flexWrap: "wrap",
@@ -166,15 +289,23 @@ export default function RealtimePage() {
                       marginBottom: 8,
                     }}
                   >
-                    <Text
+                    <View
                       style={{
-                        fontWeight: "bold",
-                        fontSize: 18,
-                        fontFamily: "Oswald-Bold",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 4,
                       }}
                     >
-                      {driver.name}
-                    </Text>
+                      <Text
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: 18,
+                          fontFamily: "Oswald-Bold",
+                        }}
+                      >
+                        {driver.name}
+                      </Text>
+                    </View>
                     <Text
                       style={{
                         color: "#666",
@@ -183,6 +314,23 @@ export default function RealtimePage() {
                     >
                       {driver.location}
                     </Text>
+
+                    {/* Show additional real-time info for João Silva */}
+                    {driver.id === "joao-silva-real" &&
+                      driver.speed !== undefined && (
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#444",
+                            fontFamily: "JosefinSans-Regular",
+                            marginTop: 2,
+                          }}
+                        >
+                          Velocidade: {Math.round(driver.speed)} km/h
+                          {driver.is_sleeping && " • SONOLENTO"}
+                        </Text>
+                      )}
+
                     <Text
                       style={{
                         fontSize: 12,

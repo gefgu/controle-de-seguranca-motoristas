@@ -14,6 +14,7 @@ import { Text, Button } from "@rneui/themed";
 import { Icon } from "@rneui/base";
 import RouteCard from "../../components/RouteCard";
 import Loading from "../../components/Loading";
+import { supabase } from "../../lib/supabase";
 
 const truck_icon = require("../../assets/truck_icon.png");
 const sleep_icon = require("../../assets/sleep.png");
@@ -32,7 +33,7 @@ const MOCK_ROUTE_DATA = {
   origin: "Curitiba",
   origin_lat: -25.4284,
   origin_lon: -49.2733,
-  driver: "João Silva",
+  driver: "João Silva", // This is our tracked driver
   id: "mock-route-1",
   destination: "São Paulo",
   destination_lat: -23.5505,
@@ -150,40 +151,62 @@ export default function DriverMapView() {
 
       const currentTime = Date.now();
 
-      if (isSleeping) {
-        if (!lastSleepTime || currentTime - lastSleepTime >= 10000) {
-          setSleepPoints([
-            ...sleepPoints,
-            {
-              latitude: location.coords.latitude as number,
-              longitude: location.coords.longitude as number,
-            },
-          ]);
+      try {
+        if (isSleeping) {
+          if (!lastSleepTime || currentTime - lastSleepTime >= 10000) {
+            setSleepPoints([
+              ...sleepPoints,
+              {
+                latitude: location.coords.latitude as number,
+                longitude: location.coords.longitude as number,
+              },
+            ]);
 
-          // Remove Supabase insert and just log to console
-          console.log("Sleep tracking point added", {
+            // Insert sleep tracking point to Supabase tracking_sample table
+            const { error } = await supabase.from("tracking_sample").insert({
+              driver: data.driver,
+              lat: location.coords.latitude,
+              lon: location.coords.longitude,
+              speed: location.coords.speed || 0,
+              is_sleeping: true,
+              time: new Date().toISOString(),
+            });
+
+            if (error) {
+              console.error("Error inserting sleep tracking:", error);
+            } else {
+              console.log(
+                "Sleep tracking point added to tracking_sample table"
+              );
+            }
+
+            setLastSleepTime(currentTime);
+          }
+        } else {
+          // Insert regular tracking point to Supabase tracking_sample table
+          const { error } = await supabase.from("tracking_sample").insert({
             driver: data.driver,
             lat: location.coords.latitude,
             lon: location.coords.longitude,
-            speed: location.coords.speed,
-            is_sleeping: isSleeping,
+            speed: location.coords.speed || 0,
+            is_sleeping: false,
+            time: new Date().toISOString(),
           });
 
-          setLastSleepTime(currentTime);
+          if (error) {
+            console.error("Error inserting tracking:", error);
+          } else {
+            console.log(
+              "Regular tracking point added to tracking_sample table"
+            );
+          }
         }
-      } else {
-        // Remove Supabase insert and just log to console
-        console.log("Regular tracking point added", {
-          driver: data.driver,
-          lat: location.coords.latitude,
-          lon: location.coords.longitude,
-          speed: location.coords.speed,
-          is_sleeping: isSleeping,
-        });
+      } catch (error) {
+        console.error("Error logging route:", error);
       }
     }
 
-    const intervalId = setInterval(logRoute, 5000);
+    const intervalId = setInterval(logRoute, 5000); // Send data every 5 seconds
     return () => clearInterval(intervalId);
   }, [location, data, isSleeping, lastSleepTime, sleepPoints]);
 
@@ -299,7 +322,7 @@ export default function DriverMapView() {
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>
             Caminhão #1234 - Status: {isSleeping ? "Dormindo" : "Alerta"}
           </Text>
-          {/* <Button
+          <Button
             title={isSleeping ? "Marcar como Alerta" : "Simular Sonolência"}
             onPress={toggleSleepStatus}
             buttonStyle={{
@@ -308,7 +331,7 @@ export default function DriverMapView() {
               marginTop: 5,
             }}
             size="sm"
-          /> */}
+          />
         </View>
       </View>
     </View>

@@ -1,17 +1,14 @@
 import { View } from "react-native";
 import { styles } from "../../../styles";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-// import { GOOGLE_MAPS_DIRECTIONS_API_KEY } from "@env";
 
 import { useEffect, useRef, useState } from "react";
-import { Card, Text } from "@rneui/themed";
-import { Icon, ListItem } from "@rneui/base";
+import { Text } from "@rneui/themed";
+import { Icon } from "@rneui/base";
 import { supabase } from "../../../lib/supabase";
 import Loading from "../../../components/Loading";
-import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { loadRouteData, RoutePoint } from "../../../lib/routeData";
-
-// enableLatestRenderer();
 
 const truck_icon = require("../../../assets/truck_icon.png");
 const sleep_icon = require("../../../assets/sleep.png");
@@ -43,32 +40,140 @@ export default function DriverMapView() {
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
-    const loadRoute = async () => {
-      const points = await loadRouteData();
-      setRoutePoints(points);
+    if (driver_id === "joao-silva" || driver_id === "joao-silva-real") {
+      // For João Silva, use real-time tracking data from tracking_sample
 
-      if (points.length > 0) {
-        // Set initial position
-        setData({
-          id: "demo-1",
-          driver: driver_id,
-          lat: points[0].lat,
-          lon: points[0].lon,
-          time: new Date().toISOString(),
-          speed: 60,
-          is_sleeping: false,
-        });
+      // Get initial data
+      const fetchLatestTracking = async () => {
+        try {
+          const { data: trackingData, error } = await supabase
+            .from("tracking_sample")
+            .select("*")
+            .eq("driver", "João Silva")
+            .order("time", { ascending: false })
+            .limit(1);
+
+          if (error) {
+            console.error(
+              "Error fetching tracking from tracking_sample:",
+              error
+            );
+            return;
+          }
+
+          if (trackingData && trackingData.length > 0) {
+            const latest = trackingData[0];
+            setData({
+              id: latest.id,
+              driver: latest.driver,
+              lat: latest.lat,
+              lon: latest.lon,
+              time: latest.time,
+              speed: latest.speed,
+              is_sleeping: latest.is_sleeping,
+            });
+
+            if (latest.is_sleeping) {
+              setSleepPoints((prev) => [
+                ...prev,
+                { latitude: latest.lat, longitude: latest.lon },
+              ]);
+            }
+          }
+
+          setLoading(false);
+        } catch (error) {
+          console.error(
+            "Error fetching tracking data from tracking_sample:",
+            error
+          );
+          setLoading(false);
+        }
+      };
+
+      fetchLatestTracking();
+
+      // Set up real-time subscription for tracking_sample
+      const subscription = supabase
+        .channel("tracking-sample-map-updates")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "tracking_sample",
+            filter: "driver=eq.João Silva",
+          },
+          (payload) => {
+            console.log("Map real-time update from tracking_sample:", payload);
+
+            const trackingData = payload.new;
+
+            setData({
+              id: trackingData.id,
+              driver: trackingData.driver,
+              lat: trackingData.lat,
+              lon: trackingData.lon,
+              time: trackingData.time,
+              speed: trackingData.speed,
+              is_sleeping: trackingData.is_sleeping,
+            });
+
+            // Add sleep point if detected
+            if (trackingData.is_sleeping) {
+              setSleepPoints((prev) => [
+                ...prev,
+                {
+                  latitude: trackingData.lat,
+                  longitude: trackingData.lon,
+                },
+              ]);
+            }
+
+            // Animate map to new position
+            mapRef.current?.animateCamera({
+              pitch: 20,
+              center: {
+                latitude: trackingData.lat,
+                longitude: trackingData.lon,
+              },
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    } else {
+      // For other drivers, use simulated data
+      const loadRoute = async () => {
+        const points = await loadRouteData();
+        setRoutePoints(points);
+
+        if (points.length > 0) {
+          // Set initial position
+          setData({
+            id: "demo-1",
+            driver: driver_id,
+            lat: points[0].lat,
+            lon: points[0].lon,
+            time: new Date().toISOString(),
+            speed: 60,
+            is_sleeping: false,
+          });
+        }
         setLoading(false);
-      }
-    };
+      };
 
-    loadRoute();
-  }, []);
+      loadRoute();
+    }
+  }, [driver_id]);
 
   useEffect(() => {
     if (routePoints.length === 0) return;
 
-    // Simulate movement along the route
+    // Simulate movement along the route for non-real-time drivers
     const intervalId = setInterval(() => {
       const nextIndex = (currentPointIndex + 1) % routePoints.length;
       const point = routePoints[nextIndex];
@@ -105,7 +210,7 @@ export default function DriverMapView() {
     }, 1000); // Move every second
 
     return () => clearInterval(intervalId);
-  }, [routePoints, currentPointIndex]);
+  }, [routePoints, currentPointIndex, driver_id]);
 
   if (loading || !data) return <Loading />;
 
@@ -144,9 +249,18 @@ export default function DriverMapView() {
         <Icon name="truck" type="font-awesome" size={48} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-            Caminhão #1234
+            {data.driver} - Caminhão #1234
           </Text>
-          <Text>{`Velocidade: ${data.speed} km/h`}</Text>
+          <Text>{`Velocidade: ${Math.round(data.speed)} km/h`}</Text>
+          {data.is_sleeping && (
+            <Text style={{ color: "red", fontWeight: "bold" }}>
+              ⚠️ SONOLÊNCIA DETECTADA
+            </Text>
+          )}
+          <Text style={{ fontSize: 12, color: "#666" }}>
+            Última atualização:{" "}
+            {new Date(data.time).toLocaleTimeString("pt-BR")}
+          </Text>
         </View>
       </View>
     </View>
