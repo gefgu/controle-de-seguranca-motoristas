@@ -50,20 +50,22 @@ export default function LoginPage() {
 
   // Temporary bypass function for development
   const handleTemporaryBypass = () => {
-    Alert.alert(
-      "Desenvolvimento",
-      "Google Sign-In em configuração. Prosseguir temporariamente?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Prosseguir",
-          onPress: () => {
-            console.log("Bypassing authentication for development");
-            router.push(getRoleDestination());
-          },
-        },
-      ]
-    );
+    router.push(getRoleDestination());
+
+    // Alert.alert(
+    //   "Desenvolvimento",
+    //   "Google Sign-In em configuração. Prosseguir temporariamente?",
+    //   [
+    //     { text: "Cancelar", style: "cancel" },
+    //     {
+    //       text: "Prosseguir",
+    //       onPress: () => {
+    //         console.log("Bypassing authentication for development");
+    //         router.push(getRoleDestination());
+    //       },
+    //     },
+    //   ]
+    // );
   };
 
   const handleGoogleLogin = async () => {
@@ -103,24 +105,26 @@ export default function LoginPage() {
         Alert.alert("Error", "Google Play Services not available");
       } else if (error.message === "DEVELOPER_ERROR") {
         // Handle DEVELOPER_ERROR specifically
-        Alert.alert(
-          "Configuração em Andamento",
-          "Google Sign-In ainda está sendo configurado. Deseja prosseguir temporariamente?",
-          [
-            { text: "Tentar Novamente", onPress: () => handleGoogleLogin() },
-            { text: "Prosseguir", onPress: handleTemporaryBypass },
-          ]
-        );
+        handleTemporaryBypass();
+        // Alert.alert(
+        //   "Configuração em Andamento",
+        //   "Google Sign-In ainda está sendo configurado. Deseja prosseguir temporariamente?",
+        //   [
+        //     { text: "Tentar Novamente", onPress: () => handleGoogleLogin() },
+        //     { text: "Prosseguir", onPress: handleTemporaryBypass },
+        //   ]
+        // );
       } else {
         // For any other error, offer to proceed
-        Alert.alert(
-          "Erro de Autenticação",
-          "Ocorreu um erro no login. Deseja prosseguir temporariamente?",
-          [
-            { text: "Tentar Novamente", onPress: () => handleGoogleLogin() },
-            { text: "Prosseguir", onPress: handleTemporaryBypass },
-          ]
-        );
+        handleTemporaryBypass();
+        // Alert.alert(
+        //   "Erro de Autenticação",
+        //   "Ocorreu um erro no login. Deseja prosseguir temporariamente?",
+        //   [
+        //     { text: "Tentar Novamente", onPress: () => handleGoogleLogin() },
+        //     { text: "Prosseguir", onPress: handleTemporaryBypass },
+        //   ]
+        // );
       }
     }
   };
@@ -154,14 +158,14 @@ export default function LoginPage() {
           </TouchableOpacity>
 
           {/* Add a temporary bypass button for development */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={loginStyles.bypassButton}
             onPress={handleTemporaryBypass}
           >
             <Text style={loginStyles.bypassButtonText}>
               Prosseguir sem Login (Dev)
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {loading && (
             <Button
